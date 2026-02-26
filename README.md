@@ -653,23 +653,6 @@
 | 6 | 到期 |
 | 7 | 已下刊 |
 
----
-
-## Druid监控
-
-- **地址**: http://localhost:8080/api/druid/index.html
-- **用户名**: admin
-- **密码**: admin
-
-## 数据库配置
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root
-```
 
 ## 项目结构
 
@@ -748,7 +731,7 @@ advertising-system/
 │   │       └── application.yml                        # 配置文件
 │   └── test/
 ├── pom.xml                                            # Maven配置
-└── API文档.md                                         # API文档
+└── README.md                                         # API文档
 ```
 
 ## 启动项目
@@ -768,4 +751,3 @@ mvn clean package
 java -jar target/advertising-system-1.0.0.jar
 ```
 
-项目启动后，访问 http://localhost:8080/api/doc.html 查看API文档。
