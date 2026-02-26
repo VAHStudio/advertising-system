@@ -4,9 +4,6 @@ import com.advertising.common.PageResult;
 import com.advertising.common.Result;
 import com.advertising.entity.Plan;
 import com.advertising.service.PlanService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/plan")
 @RequiredArgsConstructor
-@Tag(name = "方案管理", description = "投放方案的增删改查操作")
 public class PlanController {
     
     private final PlanService planService;
@@ -29,9 +25,7 @@ public class PlanController {
      * @return 方案信息
      */
     @GetMapping("/{id}")
-    @Operation(summary = "根据ID查询方案", description = "根据方案ID获取详细信息")
-    public Result<Plan> getById(
-            @Parameter(description = "方案ID", required = true) @PathVariable Integer id) {
+    public Result<Plan> getById(@PathVariable Integer id) {
         Plan plan = planService.getById(id);
         if (plan == null) {
             return Result.notFound("方案不存在");
@@ -45,9 +39,7 @@ public class PlanController {
      * @return 方案信息
      */
     @GetMapping("/no/{planNo}")
-    @Operation(summary = "根据编号查询方案", description = "根据方案编号获取详细信息")
-    public Result<Plan> getByPlanNo(
-            @Parameter(description = "方案编号", required = true) @PathVariable String planNo) {
+    public Result<Plan> getByPlanNo(@PathVariable String planNo) {
         Plan plan = planService.getByPlanNo(planNo);
         if (plan == null) {
             return Result.notFound("方案不存在");
@@ -60,7 +52,6 @@ public class PlanController {
      * @return 方案列表
      */
     @GetMapping("/list")
-    @Operation(summary = "查询所有方案", description = "获取所有方案信息列表")
     public Result<List<Plan>> getAll() {
         List<Plan> list = planService.getAll();
         return Result.success(list);
@@ -74,11 +65,10 @@ public class PlanController {
      * @return 分页结果
      */
     @PostMapping("/page")
-    @Operation(summary = "分页查询方案", description = "根据条件分页查询方案列表")
     public Result<PageResult<Plan>> getPage(
             @RequestBody Plan plan,
-            @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer pageNum,
-            @Parameter(description = "每页大小", example = "10") @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
         PageResult<Plan> pageResult = planService.getPage(plan, pageNum, pageSize);
         return Result.success(pageResult);
     }
@@ -89,9 +79,7 @@ public class PlanController {
      * @return 方案列表
      */
     @GetMapping("/customer/{customer}")
-    @Operation(summary = "根据客户查询方案", description = "根据客户名称获取方案列表")
-    public Result<List<Plan>> getByCustomer(
-            @Parameter(description = "客户名称", required = true) @PathVariable String customer) {
+    public Result<List<Plan>> getByCustomer(@PathVariable String customer) {
         List<Plan> list = planService.getByCustomer(customer);
         return Result.success(list);
     }
@@ -102,10 +90,7 @@ public class PlanController {
      * @return 方案列表
      */
     @GetMapping("/status/{releaseStatus}")
-    @Operation(summary = "根据状态查询方案", description = "根据发布状态获取方案列表")
-    public Result<List<Plan>> getByReleaseStatus(
-            @Parameter(description = "发布状态：1-意向，2-锁位，3-执行中，4-执行完毕，5-档", required = true) 
-            @PathVariable Integer releaseStatus) {
+    public Result<List<Plan>> getByReleaseStatus(@PathVariable Integer releaseStatus) {
         List<Plan> list = planService.getByReleaseStatus(releaseStatus);
         return Result.success(list);
     }
@@ -116,9 +101,7 @@ public class PlanController {
      * @return 操作结果
      */
     @PostMapping
-    @Operation(summary = "新增方案", description = "创建新的方案信息")
-    public Result<Integer> add(
-            @Parameter(description = "方案信息", required = true) @RequestBody Plan plan) {
+    public Result<Integer> add(@RequestBody Plan plan) {
         if (plan.getPlanNo() == null || plan.getPlanNo().trim().isEmpty()) {
             return Result.badRequest("方案编号不能为空");
         }
@@ -135,9 +118,7 @@ public class PlanController {
      * @return 操作结果
      */
     @PostMapping("/batch")
-    @Operation(summary = "批量新增方案", description = "批量创建方案信息")
-    public Result<Integer> batchAdd(
-            @Parameter(description = "方案列表", required = true) @RequestBody List<Plan> list) {
+    public Result<Integer> batchAdd(@RequestBody List<Plan> list) {
         if (list == null || list.isEmpty()) {
             return Result.badRequest("方案列表不能为空");
         }
@@ -154,9 +135,7 @@ public class PlanController {
      * @return 操作结果
      */
     @PutMapping
-    @Operation(summary = "更新方案", description = "更新方案信息")
-    public Result<Integer> update(
-            @Parameter(description = "方案信息", required = true) @RequestBody Plan plan) {
+    public Result<Integer> update(@RequestBody Plan plan) {
         if (plan.getId() == null) {
             return Result.badRequest("方案ID不能为空");
         }
@@ -173,9 +152,7 @@ public class PlanController {
      * @return 操作结果
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除方案", description = "根据ID删除方案信息")
-    public Result<Integer> delete(
-            @Parameter(description = "方案ID", required = true) @PathVariable Integer id) {
+    public Result<Integer> delete(@PathVariable Integer id) {
         int result = planService.delete(id);
         if (result > 0) {
             return Result.success("删除成功", result);
@@ -189,9 +166,7 @@ public class PlanController {
      * @return 操作结果
      */
     @DeleteMapping("/batch")
-    @Operation(summary = "批量删除方案", description = "根据ID列表批量删除方案")
-    public Result<Integer> batchDelete(
-            @Parameter(description = "方案ID列表", required = true) @RequestParam List<Integer> ids) {
+    public Result<Integer> batchDelete(@RequestParam List<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
             return Result.badRequest("ID列表不能为空");
         }

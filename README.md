@@ -1,18 +1,11 @@
-# 广告投放管理系统 API 文档
+# 广告投放管理系统 
 
 ## 项目概述
 
 - **项目名称**: 广告投放管理系统
-- **技术栈**: Spring Boot 3.5+, Java 21, MyBatis, Alibaba Druid, MySQL
-- **API文档**: Knife4j (Swagger UI)
+- **技术栈**: Spring Boot 4+, Java 21, MyBatis, MySQL
 - **基础路径**: `/api`
 
-## 访问API文档
-
-启动项目后，可以通过以下地址访问API文档：
-
-- **Swagger UI**: http://localhost:8080/api/swagger-ui.html
-- **Knife4j**: http://localhost:8080/api/doc.html
 
 ## 通用响应格式
 

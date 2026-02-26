@@ -1,6 +1,5 @@
 package com.advertising.common;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -10,21 +9,16 @@ import java.io.Serializable;
  * @param <T> 数据类型
  */
 @Data
-@Schema(description = "通用响应结果")
 public class Result<T> implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
-    @Schema(description = "状态码：200成功，其他失败")
     private Integer code;
     
-    @Schema(description = "响应消息")
     private String message;
     
-    @Schema(description = "响应数据")
     private T data;
     
-    @Schema(description = "时间戳")
     private Long timestamp;
     
     public Result() {

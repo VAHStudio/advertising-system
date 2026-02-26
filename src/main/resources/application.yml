@@ -33,25 +33,6 @@ mybatis:
     default-executor-type: simple
     default-statement-timeout: 25000
 
-# Knife4j API文档配置
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-  group-configs:
-    - group: 'default'
-      paths-to-match: '/**'
-      packages-to-scan: com.advertising.controller
-
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
-    swagger-model-name: 实体类列表
-
 # 日志配置
 logging:
   level:

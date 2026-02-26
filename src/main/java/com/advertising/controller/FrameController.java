@@ -4,9 +4,6 @@ import com.advertising.common.PageResult;
 import com.advertising.common.Result;
 import com.advertising.entity.Frame;
 import com.advertising.service.FrameService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/frame")
 @RequiredArgsConstructor
-@Tag(name = "框架管理", description = "框架媒体的增删改查操作")
 public class FrameController {
     
     private final FrameService frameService;
@@ -29,9 +25,8 @@ public class FrameController {
      * @return 框架信息
      */
     @GetMapping("/{id}")
-    @Operation(summary = "根据ID查询框架", description = "根据框架ID获取详细信息")
     public Result<Frame> getById(
-            @Parameter(description = "框架ID", required = true) @PathVariable Integer id) {
+            @PathVariable Integer id) {
         Frame frame = frameService.getById(id);
         if (frame == null) {
             return Result.notFound("框架不存在");
@@ -45,9 +40,8 @@ public class FrameController {
      * @return 框架信息
      */
     @GetMapping("/no/{frameNo}")
-    @Operation(summary = "根据编号查询框架", description = "根据框架编号获取详细信息")
     public Result<Frame> getByFrameNo(
-            @Parameter(description = "框架编号", required = true) @PathVariable String frameNo) {
+            @PathVariable String frameNo) {
         Frame frame = frameService.getByFrameNo(frameNo);
         if (frame == null) {
             return Result.notFound("框架不存在");
@@ -60,7 +54,6 @@ public class FrameController {
      * @return 框架列表
      */
     @GetMapping("/list")
-    @Operation(summary = "查询所有框架", description = "获取所有框架信息列表")
     public Result<List<Frame>> getAll() {
         List<Frame> list = frameService.getAll();
         return Result.success(list);
@@ -74,11 +67,10 @@ public class FrameController {
      * @return 分页结果
      */
     @PostMapping("/page")
-    @Operation(summary = "分页查询框架", description = "根据条件分页查询框架列表")
     public Result<PageResult<Frame>> getPage(
             @RequestBody Frame frame,
-            @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer pageNum,
-            @Parameter(description = "每页大小", example = "10") @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
         PageResult<Frame> pageResult = frameService.getPage(frame, pageNum, pageSize);
         return Result.success(pageResult);
     }
@@ -89,9 +81,8 @@ public class FrameController {
      * @return 框架列表
      */
     @GetMapping("/community/{communityId}")
-    @Operation(summary = "根据社区查询框架", description = "根据社区ID获取框架列表")
     public Result<List<Frame>> getByCommunityId(
-            @Parameter(description = "社区ID", required = true) @PathVariable Integer communityId) {
+            @PathVariable Integer communityId) {
         List<Frame> list = frameService.getByCommunityId(communityId);
         return Result.success(list);
     }
@@ -102,9 +93,8 @@ public class FrameController {
      * @return 操作结果
      */
     @PostMapping
-    @Operation(summary = "新增框架", description = "创建新的框架信息")
     public Result<Integer> add(
-            @Parameter(description = "框架信息", required = true) @RequestBody Frame frame) {
+            @RequestBody Frame frame) {
         if (frame.getFrameNo() == null || frame.getFrameNo().trim().isEmpty()) {
             return Result.badRequest("框架编号不能为空");
         }
@@ -124,9 +114,8 @@ public class FrameController {
      * @return 操作结果
      */
     @PostMapping("/batch")
-    @Operation(summary = "批量新增框架", description = "批量创建框架信息")
     public Result<Integer> batchAdd(
-            @Parameter(description = "框架列表", required = true) @RequestBody List<Frame> list) {
+            @RequestBody List<Frame> list) {
         if (list == null || list.isEmpty()) {
             return Result.badRequest("框架列表不能为空");
         }
@@ -143,9 +132,8 @@ public class FrameController {
      * @return 操作结果
      */
     @PutMapping
-    @Operation(summary = "更新框架", description = "更新框架信息")
     public Result<Integer> update(
-            @Parameter(description = "框架信息", required = true) @RequestBody Frame frame) {
+            @RequestBody Frame frame) {
         if (frame.getId() == null) {
             return Result.badRequest("框架ID不能为空");
         }
@@ -162,9 +150,8 @@ public class FrameController {
      * @return 操作结果
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除框架", description = "根据ID删除框架信息")
     public Result<Integer> delete(
-            @Parameter(description = "框架ID", required = true) @PathVariable Integer id) {
+            @PathVariable Integer id) {
         int result = frameService.delete(id);
         if (result > 0) {
             return Result.success("删除成功", result);
@@ -178,9 +165,8 @@ public class FrameController {
      * @return 操作结果
      */
     @DeleteMapping("/batch")
-    @Operation(summary = "批量删除框架", description = "根据ID列表批量删除框架")
     public Result<Integer> batchDelete(
-            @Parameter(description = "框架ID列表", required = true) @RequestParam List<Integer> ids) {
+            @RequestParam List<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
             return Result.badRequest("ID列表不能为空");
         }
