@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.mapper.BarrierGateMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.entity.BarrierGate">
+        <id column="id" property="id"/>
+        <result column="gate_no" property="gateNo"/>
+        <result column="community_id" property="communityId"/>
+        <result column="device_no" property="deviceNo"/>
+        <result column="door_location" property="doorLocation"/>
+        <result column="device_position" property="devicePosition"/>
+        <result column="screen_position" property="screenPosition"/>
+        <result column="lightbox_direction" property="lightboxDirection"/>
+    </resultMap>
+    
+    <resultMap id="WithCommunityResultMap" type="com.advertising.entity.BarrierGate" extends="BaseResultMap">
+        <association property="community" javaType="com.advertising.entity.Community">
+            <id column="community_id" property="id"/>
+            <result column="community_no" property="communityNo"/>
+            <result column="building_name" property="buildingName"/>
+            <result column="building_address" property="buildingAddress"/>
+            <result column="city" property="city"/>
+        </association>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        bg.id, bg.gate_no, bg.community_id, bg.device_no, bg.door_location, 
+        bg.device_position, bg.screen_position, bg.lightbox_direction
+    </sql>
+    
+    <select id="selectById" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        WHERE bg.id = #{id}
+    </select>
+    
+    <select id="selectByGateNo" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        WHERE bg.gate_no = #{gateNo}
+    </select>
+    
+    <select id="selectAll" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        ORDER BY bg.id DESC
+    </select>
+    
+    <select id="selectList" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        <where>
+            <if test="gateNo != null and gateNo != ''">
+                AND bg.gate_no LIKE CONCAT('%', #{gateNo}, '%')
+            </if>
+            <if test="communityId != null">
+                AND bg.community_id = #{communityId}
+            </if>
+            <if test="deviceNo != null and deviceNo != ''">
+                AND bg.device_no LIKE CONCAT('%', #{deviceNo}, '%')
+            </if>
+            <if test="devicePosition != null">
+                AND bg.device_position = #{devicePosition}
+            </if>
+            <if test="screenPosition != null">
+                AND bg.screen_position = #{screenPosition}
+            </if>
+            <if test="lightboxDirection != null">
+                AND bg.lightbox_direction = #{lightboxDirection}
+            </if>
+        </where>
+        ORDER BY bg.id DESC
+    </select>
+    
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM barrier_gate bg
+        <where>
+            <if test="gateNo != null and gateNo != ''">
+                AND bg.gate_no LIKE CONCAT('%', #{gateNo}, '%')
+            </if>
+            <if test="communityId != null">
+                AND bg.community_id = #{communityId}
+            </if>
+            <if test="deviceNo != null and deviceNo != ''">
+                AND bg.device_no LIKE CONCAT('%', #{deviceNo}, '%')
+            </if>
+            <if test="devicePosition != null">
+                AND bg.device_position = #{devicePosition}
+            </if>
+            <if test="screenPosition != null">
+                AND bg.screen_position = #{screenPosition}
+            </if>
+            <if test="lightboxDirection != null">
+                AND bg.lightbox_direction = #{lightboxDirection}
+            </if>
+        </where>
+    </select>
+    
+    <select id="selectByCommunityId" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        WHERE bg.community_id = #{communityId}
+        ORDER BY bg.id DESC
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO barrier_gate (
+            gate_no, community_id, device_no, door_location, 
+            device_position, screen_position, lightbox_direction
+        ) VALUES (
+            #{gateNo}, #{communityId}, #{deviceNo}, #{doorLocation}, 
+            #{devicePosition}, #{screenPosition}, #{lightboxDirection}
+        )
+    </insert>
+    
+    <insert id="batchInsert">
+        INSERT INTO barrier_gate (
+            gate_no, community_id, device_no, door_location, 
+            device_position, screen_position, lightbox_direction
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.gateNo}, #{item.communityId}, #{item.deviceNo}, #{item.doorLocation}, 
+             #{item.devicePosition}, #{item.screenPosition}, #{item.lightboxDirection})
+        </foreach>
+    </insert>
+    
+    <update id="update">
+        UPDATE barrier_gate
+        <set>
+            <if test="gateNo != null">gate_no = #{gateNo},</if>
+            <if test="communityId != null">community_id = #{communityId},</if>
+            <if test="deviceNo != null">device_no = #{deviceNo},</if>
+            <if test="doorLocation != null">door_location = #{doorLocation},</if>
+            <if test="devicePosition != null">device_position = #{devicePosition},</if>
+            <if test="screenPosition != null">screen_position = #{screenPosition},</if>
+            <if test="lightboxDirection != null">lightbox_direction = #{lightboxDirection}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM barrier_gate WHERE id = #{id}
+    </delete>
+    
+    <delete id="batchDelete">
+        DELETE FROM barrier_gate WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteByCommunityId">
+        DELETE FROM barrier_gate WHERE community_id = #{communityId}
+    </delete>
+    
+</mapper>

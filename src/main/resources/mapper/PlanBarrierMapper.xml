@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.mapper.PlanBarrierMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.entity.PlanBarrier">
+        <id column="id" property="id"/>
+        <result column="plan_id" property="planId"/>
+        <result column="barrier_gate_id" property="barrierGateId"/>
+        <result column="plan_community_id" property="planCommunityId"/>
+        <result column="release_date_begin" property="releaseDateBegin"/>
+        <result column="release_date_end" property="releaseDateEnd"/>
+        <result column="release_status" property="releaseStatus"/>
+    </resultMap>
+    
+    <resultMap id="WithRelationsResultMap" type="com.advertising.entity.PlanBarrier" extends="BaseResultMap">
+        <association property="plan" javaType="com.advertising.entity.Plan">
+            <id column="plan_id" property="id"/>
+            <result column="plan_no" property="planNo"/>
+            <result column="plan_name" property="planName"/>
+            <result column="customer" property="customer"/>
+        </association>
+        <association property="barrierGate" javaType="com.advertising.entity.BarrierGate">
+            <id column="barrier_gate_id" property="id"/>
+            <result column="gate_no" property="gateNo"/>
+            <result column="device_no" property="deviceNo"/>
+            <result column="door_location" property="doorLocation"/>
+        </association>
+        <association property="planCommunity" javaType="com.advertising.entity.PlanCommunity">
+            <id column="plan_community_id" property="id"/>
+        </association>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        pb.id, pb.plan_id, pb.barrier_gate_id, pb.plan_community_id, 
+        pb.release_date_begin, pb.release_date_end, pb.release_status
+    </sql>
+    
+    <select id="selectById" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        WHERE pb.id = #{id}
+    </select>
+    
+    <select id="selectByUniqueKey" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM plan_barrier
+        WHERE plan_id = #{planId} 
+          AND barrier_gate_id = #{barrierGateId} 
+          AND plan_community_id = #{planCommunityId}
+    </select>
+    
+    <select id="selectAll" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        ORDER BY pb.id DESC
+    </select>
+    
+    <select id="selectList" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        <where>
+            <if test="planId != null">
+                AND pb.plan_id = #{planId}
+            </if>
+            <if test="barrierGateId != null">
+                AND pb.barrier_gate_id = #{barrierGateId}
+            </if>
+            <if test="planCommunityId != null">
+                AND pb.plan_community_id = #{planCommunityId}
+            </if>
+            <if test="releaseStatus != null">
+                AND pb.release_status = #{releaseStatus}
+            </if>
+        </where>
+        ORDER BY pb.id DESC
+    </select>
+    
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM plan_barrier pb
+        <where>
+            <if test="planId != null">
+                AND pb.plan_id = #{planId}
+            </if>
+            <if test="barrierGateId != null">
+                AND pb.barrier_gate_id = #{barrierGateId}
+            </if>
+            <if test="planCommunityId != null">
+                AND pb.plan_community_id = #{planCommunityId}
+            </if>
+            <if test="releaseStatus != null">
+                AND pb.release_status = #{releaseStatus}
+            </if>
+        </where>
+    </select>
+    
+    <select id="selectByPlanId" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        WHERE pb.plan_id = #{planId}
+        ORDER BY pb.id DESC
+    </select>
+    
+    <select id="selectByBarrierGateId" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        WHERE pb.barrier_gate_id = #{barrierGateId}
+        ORDER BY pb.id DESC
+    </select>
+    
+    <select id="selectByPlanCommunityId" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        WHERE pb.plan_community_id = #{planCommunityId}
+        ORDER BY pb.id DESC
+    </select>
+    
+    <select id="selectByReleaseStatus" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        WHERE pb.release_status = #{releaseStatus}
+        ORDER BY pb.id DESC
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO plan_barrier (
+            plan_id, barrier_gate_id, plan_community_id, release_date_begin, release_date_end, release_status
+        ) VALUES (
+            #{planId}, #{barrierGateId}, #{planCommunityId}, #{releaseDateBegin}, #{releaseDateEnd}, #{releaseStatus}
+        )
+    </insert>
+    
+    <insert id="batchInsert">
+        INSERT INTO plan_barrier (
+            plan_id, barrier_gate_id, plan_community_id, release_date_begin, release_date_end, release_status
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.planId}, #{item.barrierGateId}, #{item.planCommunityId}, 
+             #{item.releaseDateBegin}, #{item.releaseDateEnd}, #{item.releaseStatus})
+        </foreach>
+    </insert>
+    
+    <update id="update">
+        UPDATE plan_barrier
+        <set>
+            <if test="planId != null">plan_id = #{planId},</if>
+            <if test="barrierGateId != null">barrier_gate_id = #{barrierGateId},</if>
+            <if test="planCommunityId != null">plan_community_id = #{planCommunityId},</if>
+            <if test="releaseDateBegin != null">release_date_begin = #{releaseDateBegin},</if>
+            <if test="releaseDateEnd != null">release_date_end = #{releaseDateEnd},</if>
+            <if test="releaseStatus != null">release_status = #{releaseStatus}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM plan_barrier WHERE id = #{id}
+    </delete>
+    
+    <delete id="batchDelete">
+        DELETE FROM plan_barrier WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteByPlanId">
+        DELETE FROM plan_barrier WHERE plan_id = #{planId}
+    </delete>
+    
+    <delete id="deleteByBarrierGateId">
+        DELETE FROM plan_barrier WHERE barrier_gate_id = #{barrierGateId}
+    </delete>
+    
+</mapper>

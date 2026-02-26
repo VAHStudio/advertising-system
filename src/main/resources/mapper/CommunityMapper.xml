@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.mapper.CommunityMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.entity.Community">
+        <id column="id" property="id"/>
+        <result column="community_no" property="communityNo"/>
+        <result column="building_name" property="buildingName"/>
+        <result column="building_address" property="buildingAddress"/>
+        <result column="coord_lat" property="coordLat"/>
+        <result column="coord_lng" property="coordLng"/>
+        <result column="city" property="city"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, community_no, building_name, building_address, coord_lat, coord_lng, city
+    </sql>
+    
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM community
+        WHERE id = #{id}
+    </select>
+    
+    <select id="selectByCommunityNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM community
+        WHERE community_no = #{communityNo}
+    </select>
+    
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM community
+        ORDER BY id DESC
+    </select>
+    
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM community
+        <where>
+            <if test="communityNo != null and communityNo != ''">
+                AND community_no LIKE CONCAT('%', #{communityNo}, '%')
+            </if>
+            <if test="buildingName != null and buildingName != ''">
+                AND building_name LIKE CONCAT('%', #{buildingName}, '%')
+            </if>
+            <if test="buildingAddress != null and buildingAddress != ''">
+                AND building_address LIKE CONCAT('%', #{buildingAddress}, '%')
+            </if>
+            <if test="city != null and city != ''">
+                AND city = #{city}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+    
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM community
+        <where>
+            <if test="communityNo != null and communityNo != ''">
+                AND community_no LIKE CONCAT('%', #{communityNo}, '%')
+            </if>
+            <if test="buildingName != null and buildingName != ''">
+                AND building_name LIKE CONCAT('%', #{buildingName}, '%')
+            </if>
+            <if test="buildingAddress != null and buildingAddress != ''">
+                AND building_address LIKE CONCAT('%', #{buildingAddress}, '%')
+            </if>
+            <if test="city != null and city != ''">
+                AND city = #{city}
+            </if>
+        </where>
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO community (
+            community_no, building_name, building_address, coord_lat, coord_lng, city
+        ) VALUES (
+            #{communityNo}, #{buildingName}, #{buildingAddress}, #{coordLat}, #{coordLng}, #{city}
+        )
+    </insert>
+    
+    <insert id="batchInsert">
+        INSERT INTO community (
+            community_no, building_name, building_address, coord_lat, coord_lng, city
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.communityNo}, #{item.buildingName}, #{item.buildingAddress}, 
+             #{item.coordLat}, #{item.coordLng}, #{item.city})
+        </foreach>
+    </insert>
+    
+    <update id="update">
+        UPDATE community
+        <set>
+            <if test="communityNo != null">community_no = #{communityNo},</if>
+            <if test="buildingName != null">building_name = #{buildingName},</if>
+            <if test="buildingAddress != null">building_address = #{buildingAddress},</if>
+            <if test="coordLat != null">coord_lat = #{coordLat},</if>
+            <if test="coordLng != null">coord_lng = #{coordLng},</if>
+            <if test="city != null">city = #{city}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM community WHERE id = #{id}
+    </delete>
+    
+    <delete id="batchDelete">
+        DELETE FROM community WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <select id="selectByCity" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM community
+        WHERE city = #{city}
+        ORDER BY id DESC
+    </select>
+    
+</mapper>

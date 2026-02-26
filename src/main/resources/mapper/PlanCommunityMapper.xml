@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.mapper.PlanCommunityMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.entity.PlanCommunity">
+        <id column="id" property="id"/>
+        <result column="plan_id" property="planId"/>
+        <result column="community_id" property="communityId"/>
+        <result column="release_date_begin" property="releaseDateBegin"/>
+        <result column="release_date_end" property="releaseDateEnd"/>
+        <result column="barrier_required_qty" property="barrierRequiredQty"/>
+        <result column="frame_required_qty" property="frameRequiredQty"/>
+    </resultMap>
+    
+    <resultMap id="WithRelationsResultMap" type="com.advertising.entity.PlanCommunity" extends="BaseResultMap">
+        <association property="plan" javaType="com.advertising.entity.Plan">
+            <id column="plan_id" property="id"/>
+            <result column="plan_no" property="planNo"/>
+            <result column="plan_name" property="planName"/>
+            <result column="customer" property="customer"/>
+            <result column="plan_release_status" property="releaseStatus"/>
+        </association>
+        <association property="community" javaType="com.advertising.entity.Community">
+            <id column="community_id" property="id"/>
+            <result column="community_no" property="communityNo"/>
+            <result column="building_name" property="buildingName"/>
+            <result column="building_address" property="buildingAddress"/>
+            <result column="city" property="city"/>
+        </association>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        pc.id, pc.plan_id, pc.community_id, pc.release_date_begin, pc.release_date_end, 
+        pc.barrier_required_qty, pc.frame_required_qty
+    </sql>
+    
+    <select id="selectById" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer, p.release_status as plan_release_status,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM plan_community pc
+        LEFT JOIN plan p ON pc.plan_id = p.id
+        LEFT JOIN community c ON pc.community_id = c.id
+        WHERE pc.id = #{id}
+    </select>
+    
+    <select id="selectByPlanAndCommunity" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM plan_community
+        WHERE plan_id = #{planId} AND community_id = #{communityId}
+    </select>
+    
+    <select id="selectAll" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer, p.release_status as plan_release_status,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM plan_community pc
+        LEFT JOIN plan p ON pc.plan_id = p.id
+        LEFT JOIN community c ON pc.community_id = c.id
+        ORDER BY pc.id DESC
+    </select>
+    
+    <select id="selectList" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer, p.release_status as plan_release_status,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM plan_community pc
+        LEFT JOIN plan p ON pc.plan_id = p.id
+        LEFT JOIN community c ON pc.community_id = c.id
+        <where>
+            <if test="planId != null">
+                AND pc.plan_id = #{planId}
+            </if>
+            <if test="communityId != null">
+                AND pc.community_id = #{communityId}
+            </if>
+        </where>
+        ORDER BY pc.id DESC
+    </select>
+    
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM plan_community pc
+        <where>
+            <if test="planId != null">
+                AND pc.plan_id = #{planId}
+            </if>
+            <if test="communityId != null">
+                AND pc.community_id = #{communityId}
+            </if>
+        </where>
+    </select>
+    
+    <select id="selectByPlanId" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer, p.release_status as plan_release_status,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM plan_community pc
+        LEFT JOIN plan p ON pc.plan_id = p.id
+        LEFT JOIN community c ON pc.community_id = c.id
+        WHERE pc.plan_id = #{planId}
+        ORDER BY pc.id DESC
+    </select>
+    
+    <select id="selectByCommunityId" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer, p.release_status as plan_release_status,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM plan_community pc
+        LEFT JOIN plan p ON pc.plan_id = p.id
+        LEFT JOIN community c ON pc.community_id = c.id
+        WHERE pc.community_id = #{communityId}
+        ORDER BY pc.id DESC
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO plan_community (
+            plan_id, community_id, release_date_begin, release_date_end, 
+            barrier_required_qty, frame_required_qty
+        ) VALUES (
+            #{planId}, #{communityId}, #{releaseDateBegin}, #{releaseDateEnd}, 
+            #{barrierRequiredQty}, #{frameRequiredQty}
+        )
+    </insert>
+    
+    <insert id="batchInsert">
+        INSERT INTO plan_community (
+            plan_id, community_id, release_date_begin, release_date_end, 
+            barrier_required_qty, frame_required_qty
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.planId}, #{item.communityId}, #{item.releaseDateBegin}, #{item.releaseDateEnd}, 
+             #{item.barrierRequiredQty}, #{item.frameRequiredQty})
+        </foreach>
+    </insert>
+    
+    <update id="update">
+        UPDATE plan_community
+        <set>
+            <if test="planId != null">plan_id = #{planId},</if>
+            <if test="communityId != null">community_id = #{communityId},</if>
+            <if test="releaseDateBegin != null">release_date_begin = #{releaseDateBegin},</if>
+            <if test="releaseDateEnd != null">release_date_end = #{releaseDateEnd},</if>
+            <if test="barrierRequiredQty != null">barrier_required_qty = #{barrierRequiredQty},</if>
+            <if test="frameRequiredQty != null">frame_required_qty = #{frameRequiredQty}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM plan_community WHERE id = #{id}
+    </delete>
+    
+    <delete id="batchDelete">
+        DELETE FROM plan_community WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteByPlanId">
+        DELETE FROM plan_community WHERE plan_id = #{planId}
+    </delete>
+    
+    <delete id="deleteByCommunityId">
+        DELETE FROM plan_community WHERE community_id = #{communityId}
+    </delete>
+    
+</mapper>

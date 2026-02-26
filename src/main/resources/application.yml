@@ -1,0 +1,58 @@
+server:
+  port: 16000
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: advertising-system
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://121.40.166.153:6306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 60000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+      pool-name: HikariPool
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.advertising.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    multiple-result-sets-enabled: true
+    use-column-label: true
+    use-generated-keys: true
+    default-executor-type: simple
+    default-statement-timeout: 25000
+
+# Knife4j API文档配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.advertising.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+
+# 日志配置
+logging:
+  level:
+    com.advertising.mapper: debug
