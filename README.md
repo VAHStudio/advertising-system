@@ -33,12 +33,22 @@
 - **Maven** - 构建工具
 
 ### 前端技术栈
+
+#### 移动端 (frontend/)
 - **React 19** - UI 框架
 - **TypeScript 5.7** - 类型安全
 - **Vite 6** - 构建工具
 - **Tailwind CSS 4** - 样式框架
 - **Framer Motion** - 动画库
 - **Lucide React** - 图标库
+
+#### 桌面端 (frontend-desktop/)
+- **React 19** - UI 框架
+- **TypeScript 5.7** - 类型安全
+- **Vite 6** - 构建工具
+- **Tailwind CSS 4** - 样式框架
+- **Material Icons** - 图标库
+- **Recharts** - 图表库
 
 ## 🚀 快速开始
 
@@ -110,7 +120,7 @@ start_backend.bat
 mvn spring-boot:run
 ```
 
-**启动前端（新终端）：**
+**启动移动端前端（新终端）：**
 
 ```bash
 cd frontend
@@ -119,8 +129,28 @@ npm run dev
 ```
 
 **访问地址：**
-- 前端开发服务器: http://localhost:3000
+- 移动端前端: http://localhost:3000
 - 后端 API: http://localhost:16000/api
+
+**启动桌面端前端（新终端）：**
+
+```bash
+# 方式一：使用脚本
+# Windows
+start_desktop.bat
+
+# macOS/Linux
+./start_desktop.sh
+
+# 方式二：手动启动
+cd frontend-desktop
+npm install
+npm run dev
+```
+
+**访问地址：**
+- 桌面端前端: http://localhost:3001
+- API 代理: http://localhost:16000
 
 ### 5. 生产模式部署
 
@@ -224,7 +254,7 @@ kimi:
 
 ```
 advertising-system/
-├── frontend/                          # 前端 React 应用
+├── frontend/                          # 移动端前端 React 应用
 │   ├── src/
 │   │   ├── App.tsx                   # 主应用组件
 │   │   ├── components/
@@ -234,6 +264,26 @@ advertising-system/
 │   │   │   ├── agentService.ts      # Agent API 服务
 │   │   │   └── speechService.ts     # 语音识别服务
 │   │   ├── types.ts                 # TypeScript 类型
+│   │   └── index.css                # 全局样式
+│   └── package.json
+├── frontend-desktop/                  # 桌面端前端 React 应用
+│   ├── src/
+│   │   ├── App.tsx                   # 主应用组件
+│   │   ├── components/
+│   │   │   ├── Sidebar.tsx          # 侧边栏导航
+│   │   │   ├── Header.tsx           # 页面头部
+│   │   │   └── AIAssistant.tsx      # AI 助手悬浮按钮
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx        # 智能工作台
+│   │   │   ├── Resources.tsx        # 资源管理
+│   │   │   ├── Plans.tsx            # 方案管理
+│   │   │   ├── Customers.tsx        # 客户管理
+│   │   │   └── ...                  # 其他页面
+│   │   ├── services/
+│   │   │   ├── api.ts               # API 基础服务
+│   │   │   ├── communityService.ts  # 社区资源服务
+│   │   │   ├── planService.ts       # 方案服务
+│   │   │   └── dashboardService.ts  # 统计数据服务
 │   │   └── index.css                # 全局样式
 │   └── package.json
 ├── src/
