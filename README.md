@@ -1047,6 +1047,7 @@ POST /api/agent/v2/nlp-select
 | 6 | 到期 |
 | 7 | 已下刊 |
 
+<<<<<<< HEAD
 ---
 
 ## 🗄️ 数据库表
@@ -1080,9 +1081,12 @@ mybatis:
     default-executor-type: simple
     default-statement-timeout: 25000
 ```
+=======
+>>>>>>> 6c2772027311a04940084af063be1af46032836d
 
 ### 日志配置
 
+<<<<<<< HEAD
 ```yaml
 logging:
   level:
@@ -1090,6 +1094,84 @@ logging:
     org.springframework.web: info
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+=======
+```
+advertising-system/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/advertising/
+│   │   │       ├── AdvertisingSystemApplication.java  # 启动类
+│   │   │       ├── common/                            # 通用类
+│   │   │       │   ├── Result.java                    # 通用响应结果
+│   │   │       │   ├── PageResult.java                # 分页结果
+│   │   │       │   ├── PageRequest.java               # 分页请求
+│   │   │       │   └── GlobalExceptionHandler.java    # 全局异常处理
+│   │   │       ├── config/                            # 配置类
+│   │   │       │   ├── CorsConfig.java                # 跨域配置
+│   │   │       │   └── WebMvcConfig.java              # Web MVC配置
+│   │   │       ├── controller/                        # 控制器层
+│   │   │       │   ├── CommunityController.java
+│   │   │       │   ├── BarrierGateController.java
+│   │   │       │   ├── FrameController.java
+│   │   │       │   ├── PlanController.java
+│   │   │       │   ├── PlanCommunityController.java
+│   │   │       │   ├── PlanBarrierController.java
+│   │   │       │   └── PlanFrameController.java
+│   │   │       ├── entity/                            # 实体类
+│   │   │       │   ├── Community.java
+│   │   │       │   ├── BarrierGate.java
+│   │   │       │   ├── Frame.java
+│   │   │       │   ├── Plan.java
+│   │   │       │   ├── PlanCommunity.java
+│   │   │       │   ├── PlanBarrier.java
+│   │   │       │   └── PlanFrame.java
+│   │   │       ├── enums/                             # 枚举类
+│   │   │       │   ├── DevicePositionEnum.java
+│   │   │       │   ├── ScreenPositionEnum.java
+│   │   │       │   ├── LightboxDirectionEnum.java
+│   │   │       │   ├── InnerPositionEnum.java
+│   │   │       │   ├── PlanReleaseStatusEnum.java
+│   │   │       │   ├── SalesTypeEnum.java
+│   │   │       │   └── DetailReleaseStatusEnum.java
+│   │   │       ├── mapper/                            # 数据访问层
+│   │   │       │   ├── CommunityMapper.java
+│   │   │       │   ├── BarrierGateMapper.java
+│   │   │       │   ├── FrameMapper.java
+│   │   │       │   ├── PlanMapper.java
+│   │   │       │   ├── PlanCommunityMapper.java
+│   │   │       │   ├── PlanBarrierMapper.java
+│   │   │       │   └── PlanFrameMapper.java
+│   │   │       └── service/                           # 业务逻辑层
+│   │   │           ├── CommunityService.java
+│   │   │           ├── BarrierGateService.java
+│   │   │           ├── FrameService.java
+│   │   │           ├── PlanService.java
+│   │   │           ├── PlanCommunityService.java
+│   │   │           ├── PlanBarrierService.java
+│   │   │           ├── PlanFrameService.java
+│   │   │           └── impl/                          # 实现类
+│   │   │               ├── CommunityServiceImpl.java
+│   │   │               ├── BarrierGateServiceImpl.java
+│   │   │               ├── FrameServiceImpl.java
+│   │   │               ├── PlanServiceImpl.java
+│   │   │               ├── PlanCommunityServiceImpl.java
+│   │   │               ├── PlanBarrierServiceImpl.java
+│   │   │               └── PlanFrameServiceImpl.java
+│   │   └── resources/
+│   │       ├── mapper/                                # MyBatis映射文件
+│   │       │   ├── CommunityMapper.xml
+│   │       │   ├── BarrierGateMapper.xml
+│   │       │   ├── FrameMapper.xml
+│   │       │   ├── PlanMapper.xml
+│   │       │   ├── PlanCommunityMapper.xml
+│   │       │   ├── PlanBarrierMapper.xml
+│   │       │   └── PlanFrameMapper.xml
+│   │       └── application.yml                        # 配置文件
+│   └── test/
+├── pom.xml                                            # Maven配置
+└── README.md                                         # API文档
+>>>>>>> 6c2772027311a04940084af063be1af46032836d
 ```
 
 ## 🐛 常见问题
@@ -1103,6 +1185,7 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
+<<<<<<< HEAD
 ### 2. 数据库连接失败
 
 - 检查 MySQL 服务是否启动
@@ -1170,3 +1253,5 @@ const generateGreeting = () => {
 ---
 
 **Made with ❤️ by 永达传媒技术团队**
+=======
+>>>>>>> 6c2772027311a04940084af063be1af46032836d
