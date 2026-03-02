@@ -54,39 +54,43 @@ git clone <repository-url>
 cd advertising-system
 ```
 
-### 2. 配置数据库
+### 2. 环境变量配置
+
+⚠️ **重要**：所有敏感配置（数据库密码、API密钥）都已移至环境变量。
+
+#### 方式一：使用环境变量（推荐用于生产环境）
 
 ```bash
-# 创建数据库
-mysql -u root -p
-CREATE DATABASE mvp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+# Linux/Mac
+export DB_URL=jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+export DB_USERNAME=root
+export DB_PASSWORD=your_password_here
+export KIMI_API_KEY=your_kimi_api_key_here
 
-# 执行初始化脚本（如果有）
-mysql -u root -p mvp < src/main/resources/db/migration/*.sql
+# Windows CMD
+set DB_URL=jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+set DB_USERNAME=root
+set DB_PASSWORD=your_password_here
+set KIMI_API_KEY=your_kimi_api_key_here
 ```
 
-编辑 `src/main/resources/application.yml`：
+#### 方式二：使用 application-dev.yml（推荐用于开发环境）
+
+已创建 `src/main/resources/application-dev.yml`（该文件已被 .gitignore 排除，不会提交到Git）：
 
 ```yaml
 spring:
   datasource:
     url: jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: poiu0987@#
-```
+    password: your_password_here
 
-### 3. 配置 Kimi AI（可选）
-
-如果需要 AI 对话功能，配置 Kimi K2.5 API：
-
-```yaml
 kimi:
   api:
-    key: sk-gugb1OlYqjuOG7BhZLTCr6drYfnXihQaeoO2KajFMnSEenDs
-    endpoint: https://api.moonshot.ai/v1/chat/completions
-    model: kimi-k2.5
-    thinking: disabled  # 可选：enabled/disabled
+    key: your_kimi_api_key_here
 ```
+
+📖 详细配置说明请参考 [ENVIRONMENT.md](./ENVIRONMENT.md)
 
 ### 4. 开发模式运行
 

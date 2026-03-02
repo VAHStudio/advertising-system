@@ -26,3 +26,17 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+application-dev.yml
+application-prod.yml
+application-*.yml
+!application.yml
+!application.yml.template
+*.properties
+!application.properties
+secrets.yml
+credentials.yml
