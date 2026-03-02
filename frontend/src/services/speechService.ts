@@ -1,19 +1,10 @@
 /**
- * 阿里云语音交互服务
- * 使用阿里云智能语音交互功能实现语音转文字
+ * 语音交互服务
+ * 通过后端API获取阿里云语音识别token
  */
 
-// 阿里云语音交互配置
-const ALIYUN_CONFIG = {
-  accessKeyId: 'LTAI5tBYbMxERSZifUwns3Bo',
-  accessKeySecret: 'Dkoab98rtJN3vwT3BdwnFaHHoo0Zl2',
-  appKey: 'juFwlOCB6kSZxcLT',
-  // 使用阿里云NLS(智能语音交互)服务
-  nlsEndpoint: 'wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1',
-  // 语音参数
-  sampleRate: 16000,
-  format: 'pcm',
-};
+// 后端API配置
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:16000';
 
 export interface SpeechRecognitionResult {
   text: string;
@@ -24,6 +15,16 @@ export interface SpeechRecognitionResult {
 export type SpeechRecognitionCallback = (result: SpeechRecognitionResult) => void;
 export type SpeechErrorCallback = (error: Error) => void;
 
+// 语音识别配置接口
+interface SpeechConfig {
+  token: string;
+  wsUrl: string;
+  appKey: string;
+  expiresAt: number;
+  sampleRate: number;
+  format: string;
+}
+
 class AliyunSpeechService {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
@@ -32,6 +33,7 @@ class AliyunSpeechService {
   private onErrorCallback: SpeechErrorCallback | null = null;
   private ws: WebSocket | null = null;
   private taskId: string = '';
+  private speechConfig: SpeechConfig | null = null;
 
   // 生成唯一任务ID
   private generateTaskId(): string {
@@ -47,43 +49,21 @@ class AliyunSpeechService {
     });
   }
 
-  // URL安全的Base64编码
-  private urlSafeBase64(str: string): string {
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  // 生成RFC2104-HMAC-SHA1签名
-  private async hmacSha1(key: string, data: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(key),
-      { name: 'HMAC', hash: 'SHA-1' },
-      false,
-      ['sign']
-    );
-    const signature = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(data));
-    return btoa(String.fromCharCode(...new Uint8Array(signature)));
-  }
-
-  // 生成阿里云令牌
-  private async generateToken(): Promise<string> {
-    const date = new Date();
-    const timestamp = Math.floor(date.getTime() / 1000);
-    const dateStr = date.toISOString().replace(/[:\-]|\.\d{3}/g, '');
-    
-    const policyText = JSON.stringify({
-      expiration: new Date((timestamp + 3600) * 1000).toISOString(),
-      conditions: [
-        ['acs:access_key_id', ALIYUN_CONFIG.accessKeyId],
-        ['date', dateStr]
-      ]
-    });
-    
-    const policy = this.urlSafeBase64(policyText);
-    const signature = await this.hmacSha1(ALIYUN_CONFIG.accessKeySecret, policy);
-    
-    return `${ALIYUN_CONFIG.accessKeyId}:${policy}:${signature}`;
+  // 从后端获取语音识别配置
+  private async fetchSpeechConfig(): Promise<SpeechConfig> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/speech/token`);
+      if (!response.ok) {
+        throw new Error('获取语音配置失败');
+      }
+      const result = await response.json();
+      if (result.code !== 200) {
+        throw new Error(result.message || '获取语音配置失败');
+      }
+      return result.data;
+    } catch (error) {
+      throw new Error('获取语音配置失败: ' + (error as Error).message);
+    }
   }
 
   // 开始语音识别
@@ -98,10 +78,13 @@ class AliyunSpeechService {
       this.isRecording = true;
       this.taskId = this.generateTaskId();
 
+      // 从后端获取配置
+      this.speechConfig = await this.fetchSpeechConfig();
+
       // 获取麦克风权限
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: ALIYUN_CONFIG.sampleRate,
+          sampleRate: this.speechConfig.sampleRate,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -137,10 +120,11 @@ class AliyunSpeechService {
   // 连接到阿里云NLS服务
   private async connectToNLS(): Promise<void> {
     try {
-      const token = await this.generateToken();
-      const url = `${ALIYUN_CONFIG.nlsEndpoint}?token=${encodeURIComponent(token)}`;
-      
-      this.ws = new WebSocket(url);
+      if (!this.speechConfig) {
+        throw new Error('语音配置未初始化');
+      }
+
+      this.ws = new WebSocket(this.speechConfig.wsUrl);
       
       this.ws.onopen = () => {
         // 发送开始指令
@@ -150,11 +134,11 @@ class AliyunSpeechService {
             task_id: this.taskId,
             namespace: 'SpeechRecognizer',
             name: 'StartRecognition',
-            appkey: ALIYUN_CONFIG.appKey,
+            appkey: this.speechConfig!.appKey,
           },
           payload: {
-            format: ALIYUN_CONFIG.format,
-            sample_rate: ALIYUN_CONFIG.sampleRate,
+            format: this.speechConfig!.format,
+            sample_rate: this.speechConfig!.sampleRate,
             enable_intermediate_result: true,
             enable_punctuation_prediction: true,
             enable_inverse_text_normalization: true,
@@ -228,7 +212,7 @@ class AliyunSpeechService {
         task_id: this.taskId,
         namespace: 'SpeechRecognizer',
         name: 'StopRecognition',
-        appkey: ALIYUN_CONFIG.appKey,
+        appkey: this.speechConfig!.appKey,
       }
     };
     this.ws.send(JSON.stringify(stopCmd));
@@ -250,6 +234,7 @@ class AliyunSpeechService {
 
     this.mediaRecorder = null;
     this.audioChunks = [];
+    this.speechConfig = null;
   }
 
   // 处理错误

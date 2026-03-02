@@ -58,6 +58,19 @@ $env:KIMI_API_KEY="your_kimi_api_key_here"
 | `KIMI_MODEL` | Kimi模型名称 | `kimi-k2.5` |
 | `KIMI_THINKING` | 是否启用思考模式 | `disabled` |
 
+## 阿里云语音交互配置（可选）
+
+用于语音输入功能，需要阿里云智能语音交互服务：
+
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `ALIYUN_SPEECH_ACCESS_KEY_ID` | 阿里云AccessKey ID | `LTAIxxxxx` |
+| `ALIYUN_SPEECH_ACCESS_KEY_SECRET` | 阿里云AccessKey Secret | `your_secret_here` |
+| `ALIYUN_SPEECH_APP_KEY` | 阿里云语音交互AppKey | `your_app_key` |
+| `ALIYUN_SPEECH_ENDPOINT` | 阿里云NLS服务端点 | `wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1` |
+
+**注意**：阿里云语音密钥**不应该在前端代码中硬编码**。前端通过调用后端 `/api/speech/token` 接口获取临时的语音识别token。后端负责管理密钥并生成带签名的token。
+
 ## 配置文件优先级
 
 Spring Boot 会按以下顺序加载配置（后加载的覆盖先加载的）：
