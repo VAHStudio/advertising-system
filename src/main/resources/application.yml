@@ -12,7 +12,7 @@ spring:
       matching-strategy: ant_path_matcher
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://121.40.166.153:6306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: poiu0987@#
     hikari:
@@ -42,9 +42,10 @@ logging:
   level:
     com.advertising.mapper: debug
 
-# Kimi AI 配置
+# Kimi AI 配置 (Kimi K2.5)
 kimi:
   api:
-    key: sk-sEw7FpZfisMZ2hNwSrHtdN4WV5AwD8pQ3Y3OODfmVdv88zKG
-    endpoint: https://api.moonshot.cn/v1/chat/completions
-    model: moonshot-v1-8k
+    key: sk-gugb1OlYqjuOG7BhZLTCr6drYfnXihQaeoO2KajFMnSEenDs
+    endpoint: https://api.moonshot.ai/v1/chat/completions
+    model: kimi-k2.5
+    thinking: disabled  # 关闭思考模式，追求速度

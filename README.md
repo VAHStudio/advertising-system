@@ -70,26 +70,37 @@ mysql -u root -p mvp < src/main/resources/db/migration/*.sql
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: your_password
+    password: poiu0987@#
 ```
 
 ### 3. 配置 Kimi AI（可选）
 
-如果需要 AI 对话功能，配置 Kimi API Key：
+如果需要 AI 对话功能，配置 Kimi K2.5 API：
 
 ```yaml
 kimi:
   api:
-    key: your_kimi_api_key_here
-    endpoint: https://api.moonshot.cn/v1/chat/completions
-    model: moonshot-v1-8k
+    key: sk-gugb1OlYqjuOG7BhZLTCr6drYfnXihQaeoO2KajFMnSEenDs
+    endpoint: https://api.moonshot.ai/v1/chat/completions
+    model: kimi-k2.5
+    thinking: disabled  # 可选：enabled/disabled
 ```
 
 ### 4. 开发模式运行
 
-**启动后端：**
+**启动后端（方式一：使用脚本）：**
+
+```bash
+# Windows
+start_backend.bat
+
+# macOS/Linux
+./start_backend.sh
+```
+
+**启动后端（方式二：使用Maven）：**
 
 ```bash
 mvn spring-boot:run
@@ -124,6 +135,86 @@ java -jar target/advertising-system-1.0.0.jar
 ```
 
 **访问地址：** http://localhost:16000
+
+---
+
+## ⚙️ 配置说明
+
+### 数据库配置
+
+```yaml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: poiu0987@#
+    hikari:
+      minimum-idle: 5              # 最小空闲连接数
+      maximum-pool-size: 20        # 最大连接池大小
+      connection-timeout: 60000    # 连接超时时间（毫秒）
+      idle-timeout: 300000         # 空闲连接超时时间（毫秒）
+      max-lifetime: 1800000        # 连接最大生命周期（毫秒）
+      connection-test-query: SELECT 1  # 连接测试查询
+      pool-name: HikariPool
+```
+
+**数据库连接参数说明：**
+
+| 参数 | 说明 | 示例值 |
+|------|------|--------|
+| `url` | 数据库连接URL | `jdbc:mysql://121.40.166.153:3306/mvp` |
+| `username` | 数据库用户名 | `root` |
+| `password` | 数据库密码 | `poiu0987@#` |
+| `minimum-idle` | 最小空闲连接数 | `5` |
+| `maximum-pool-size` | 最大连接池大小 | `20` |
+| `connection-timeout` | 连接超时时间（毫秒） | `60000` |
+| `idle-timeout` | 空闲连接超时时间（毫秒） | `300000` |
+| `max-lifetime` | 连接最大生命周期（毫秒） | `1800000` |
+
+### Kimi AI 大模型配置
+
+```yaml
+# Kimi AI 配置 (Kimi K2.5)
+kimi:
+  api:
+    key: sk-gugb1OlYqjuOG7BhZLTCr6drYfnXihQaeoO2KajFMnSEenDs  # API密钥
+    endpoint: https://api.moonshot.ai/v1/chat/completions      # API端点
+    model: kimi-k2.5                                           # 模型名称
+    thinking: disabled                                          # 思考模式：enabled/disabled
+```
+
+**Kimi API 参数说明：**
+
+| 参数 | 说明 | 可选值 | 默认值 |
+|------|------|--------|--------|
+| `key` | Kimi API密钥 | - | - |
+| `endpoint` | API请求地址 | `https://api.moonshot.ai/v1/chat/completions` | - |
+| `model` | 模型名称 | `kimi-k2.5` | `kimi-k2.5` |
+| `thinking` | 思考模式 | `enabled`, `disabled` | `disabled` |
+
+**思考模式说明：**
+- `enabled`: 开启思考模式，模型会展示思考过程，适合需要详细解释的场景
+- `disabled`: 关闭思考模式，直接返回答案，响应速度更快（推荐用于生产环境）
+
+**API请求格式示例：**
+
+```json
+{
+  "model": "kimi-k2.5",
+  "messages": [
+    {"role": "system", "content": "你是一个广告投放管理系统的AI助手..."},
+    {"role": "user", "content": "帮我创建一个可口可乐的广告方案"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 4096,
+  "extra_body": {
+    "thinking": {
+      "type": "disabled"
+    }
+  }
+}
+```
 
 ## 📁 项目结构
 
@@ -285,7 +376,678 @@ Content-Type: application/json
 
 ### 其他 REST API
 
-详见 [API 文档](#api-documentation) 部分
+详见下方的 [完整API文档](#完整api文档) 部分
+
+---
+
+## 🧠 DSL Agent 架构（智能点位选择 V2）
+
+### Agent业务场景覆盖
+
+系统支持 **170个** 业务场景，覆盖媒介、销售、系统三大领域：
+
+| 领域 | 场景数量 | 主要场景类型 |
+|------|---------|-------------|
+| **媒介域** | 80个 | 资源查询、分配、方案管理、档期管理、监播、数据分析、维护、报表 |
+| **销售域** | 80个 | 客户管理、商机、报价、合同、收款、销售分析、客户服务、市场洞察 |
+| **通用域** | 30个 | 系统管理、数据智能、自然语言转SQL |
+
+**核心场景示例：**
+- ✅ **资源分配**："选100面道闸，每楼盘2个，优先选进口，要空闲的"
+- ✅ **档期查询**："查询3月份哪些点位被占用了"
+- ✅ **客户分析**："查询可口可乐的历史投放记录"
+- ✅ **销售统计**："统计上个月的销售业绩"
+- ✅ **智能推荐**："推荐适合汽车客户的空闲点位"
+
+### 架构设计
+
+基于 **DSL (Domain Specific Language) + SQL模板引擎** 实现复杂点位筛选：
+
+```
+用户交互层 (Controller)
+    ↓
+DSL编排层 (DSL + SQL模板引擎)
+    - DSL验证 → 规则匹配 → SQL模板选择 → 参数填充 → SQL生成
+    ↓
+执行引擎层 (JdbcTemplate)
+    - SQL安全校验 → 沙箱执行 → 结果格式化
+    ↓
+配置管理层
+    - DSL Schema定义 / SQL模板库 / 规则版本管理
+```
+
+### 核心组件
+
+#### 1. PointSelectionDSL - 领域特定语言
+
+```java
+PointSelectionDSL.builder()
+    .mediaType("barrier")                                    // 媒体类型
+    .targetCount(100)                                        // 目标数量
+    .dateRange(DateRange.builder()                          // 投放日期
+        .beginDate(LocalDate.of(2025, 3, 1))
+        .endDate(LocalDate.of(2025, 3, 31))
+        .build())
+    .distributionStrategy(DistributionStrategy.builder()    // 分配策略
+        .type("per_community")                               // 每社区分配
+        .perCommunityCount(2)                               // 每社区2个
+        .maxCommunities(50)                                 // 最多50个社区
+        .build())
+    .filterConditions(FilterConditions.builder()            // 筛选条件
+        .devicePosition("entrance")                         // 优先进口
+        .onlyAvailable(true)                                // 只选空闲
+        .city("南京市")                                     // 城市筛选
+        .build())
+    .sortRules(List.of(                                     // 排序规则
+        SortRule.builder().field("priority").direction("desc").build()
+    ))
+    .build();
+```
+
+#### 2. SQL模板引擎
+
+预定义模板支持复杂场景：
+
+- **BARRIER_SELECT_WITH_DISTRIBUTION**: 道闸按社区分配
+- **FRAME_SELECT_WITH_DISTRIBUTION**: 框架按社区分配
+- **BARRIER_SELECT_SIMPLE**: 简单道闸查询
+- **COMMUNITY_AVAILABILITY_STATS**: 社区可用性统计
+
+**示例生成的SQL**（选100面道闸，每楼盘2个，优先进口）：
+
+```sql
+WITH available_barriers AS (
+    SELECT 
+        bg.id as barrier_gate_id,
+        bg.gate_no,
+        bg.community_id,
+        c.building_name as community_name,
+        ROW_NUMBER() OVER (PARTITION BY bg.community_id 
+                          ORDER BY bg.device_position, bg.gate_no) as rn
+    FROM barrier_gate bg
+    INNER JOIN community c ON bg.community_id = c.id
+    WHERE bg.status = 1
+    AND (bg.device_position IN (1))  -- 进口优先
+    AND bg.id NOT IN (
+        -- 排除档期冲突的点位
+        SELECT pb.barrier_gate_id 
+        FROM plan_barrier pb
+        WHERE pb.release_status IN (2, 3, 4)
+        AND NOT (pb.release_date_end < '2025-03-01' 
+                 OR pb.release_date_begin > '2025-03-31')
+    )
+),
+selected_communities AS (
+    SELECT community_id
+    FROM available_barriers
+    WHERE rn <= 2  -- 每社区2个
+    GROUP BY community_id
+    HAVING COUNT(*) >= 0
+    LIMIT 50       -- 最多50个社区
+)
+SELECT * FROM available_barriers ab
+INNER JOIN selected_communities sc ON ab.community_id = sc.community_id
+WHERE ab.rn <= 2
+ORDER BY ab.community_id, ab.rn
+LIMIT 100;
+```
+
+### 使用场景
+
+#### 场景1：选档期内的道闸，每楼盘分配
+```json
+POST /api/agent/v2/select-points
+{
+    "mediaType": "barrier",
+    "targetCount": 100,
+    "dateRange": {
+        "beginDate": "2025-03-01",
+        "endDate": "2025-03-31"
+    },
+    "distributionStrategy": {
+        "type": "per_community",
+        "perCommunityCount": 2,
+        "maxCommunities": 50
+    },
+    "filterConditions": {
+        "devicePosition": "entrance",
+        "onlyAvailable": true,
+        "city": "南京市"
+    }
+}
+```
+
+#### 场景2：自然语言智能选择
+```json
+POST /api/agent/v2/nlp-select
+{
+    "message": "选3月份档期内的100面道闸，每个楼盘2个，优先选进口，要空闲的"
+}
+```
+
+---
+
+## 📚 完整API文档
+
+### 通用响应格式
+
+所有API返回统一格式：
+
+```json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": {},
+    "timestamp": 1704067200000
+}
+```
+
+**状态码说明：**
+
+| 状态码 | 说明 |
+|--------|------|
+| 200 | 成功 |
+| 400 | 参数错误 |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |
+
+### 一、社区管理 (Community)
+
+**基础路径**: `/api/community`
+
+#### 1. 根据ID查询社区
+- **请求方式**: GET
+- **请求路径**: `/api/community/{id}`
+- **参数说明**:
+  - `id` (路径参数): 社区ID
+- **响应示例**:
+```json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+        "id": 1,
+        "communityNo": "COMM001",
+        "buildingName": "阳光花园",
+        "buildingAddress": "北京市朝阳区xxx街道",
+        "coordLat": 39.9042,
+        "coordLng": 116.4074,
+        "city": "北京"
+    }
+}
+```
+
+#### 2. 根据编号查询社区
+- **请求方式**: GET
+- **请求路径**: `/api/community/no/{communityNo}`
+
+#### 3. 查询所有社区
+- **请求方式**: GET
+- **请求路径**: `/api/community/list`
+
+#### 4. 分页查询社区
+- **请求方式**: POST
+- **请求路径**: `/api/community/page?pageNum=1&pageSize=10`
+- **请求体**:
+```json
+{
+    "communityNo": "COMM",
+    "buildingName": "阳光",
+    "buildingAddress": "",
+    "city": "北京"
+}
+```
+
+#### 5. 新增社区
+- **请求方式**: POST
+- **请求路径**: `/api/community`
+- **请求体**:
+```json
+{
+    "communityNo": "COMM002",
+    "buildingName": "翠湖小区",
+    "buildingAddress": "上海市浦东新区xxx路",
+    "coordLat": 31.2304,
+    "coordLng": 121.4737,
+    "city": "上海"
+}
+```
+
+#### 6. 批量新增社区
+- **请求方式**: POST
+- **请求路径**: `/api/community/batch`
+
+#### 7. 更新社区
+- **请求方式**: PUT
+- **请求路径**: `/api/community`
+
+#### 8. 删除社区
+- **请求方式**: DELETE
+- **请求路径**: `/api/community/{id}`
+
+#### 9. 根据城市查询社区
+- **请求方式**: GET
+- **请求路径**: `/api/community/city/{city}`
+
+### 二、道闸管理 (Barrier Gate)
+
+**基础路径**: `/api/barrier-gate`
+
+#### 1. 根据ID查询道闸
+- **请求方式**: GET
+- **请求路径**: `/api/barrier-gate/{id}`
+
+#### 2. 根据编号查询道闸
+- **请求方式**: GET
+- **请求路径**: `/api/barrier-gate/no/{gateNo}`
+
+#### 3. 查询所有道闸
+- **请求方式**: GET
+- **请求路径**: `/api/barrier-gate/list`
+
+#### 4. 根据社区查询道闸
+- **请求方式**: GET
+- **请求路径**: `/api/barrier-gate/community/{communityId}`
+
+#### 5. 新增道闸
+- **请求方式**: POST
+- **请求路径**: `/api/barrier-gate`
+- **请求体**:
+```json
+{
+    "gateNo": "GATE001",
+    "communityId": 1,
+    "deviceNo": "DEV001",
+    "doorLocation": "东门"
+}
+```
+
+#### 6. 更新道闸
+- **请求方式**: PUT
+- **请求路径**: `/api/barrier-gate`
+
+#### 7. 删除道闸
+- **请求方式**: DELETE
+- **请求路径**: `/api/barrier-gate/{id}`
+
+### 三、框架管理 (Frame)
+
+**基础路径**: `/api/frame`
+
+#### 1. 根据ID查询框架
+- **请求方式**: GET
+- **请求路径**: `/api/frame/{id}`
+
+#### 2. 根据编号查询框架
+- **请求方式**: GET
+- **请求路径**: `/api/frame/no/{frameNo}`
+
+#### 3. 查询所有框架
+- **请求方式**: GET
+- **请求路径**: `/api/frame/list`
+
+#### 4. 根据社区查询框架
+- **请求方式**: GET
+- **请求路径**: `/api/frame/community/{communityId}`
+
+#### 5. 新增框架
+- **请求方式**: POST
+- **请求路径**: `/api/frame`
+- **请求体**:
+```json
+{
+    "frameNo": "FRAME001",
+    "communityId": 1,
+    "building": "A座",
+    "unit": "1单元",
+    "elevator": "1号电梯"
+}
+```
+
+#### 6. 更新框架
+- **请求方式**: PUT
+- **请求路径**: `/api/frame`
+
+#### 7. 删除框架
+- **请求方式**: DELETE
+- **请求路径**: `/api/frame/{id}`
+
+### 四、方案管理 (Plan)
+
+**基础路径**: `/api/plan`
+
+#### 1. 根据ID查询方案
+- **请求方式**: GET
+- **请求路径**: `/api/plan/{id}`
+
+#### 2. 根据编号查询方案
+- **请求方式**: GET
+- **请求路径**: `/api/plan/no/{planNo}`
+
+#### 3. 查询所有方案
+- **请求方式**: GET
+- **请求路径**: `/api/plan/list`
+
+#### 4. 分页查询方案
+- **请求方式**: POST
+- **请求路径**: `/api/plan/page?pageNum=1&pageSize=10`
+- **请求体**:
+```json
+{
+    "planNo": "PLAN",
+    "planName": "春季推广",
+    "customer": "某某公司",
+    "releaseStatus": 3,
+    "salesType": 1
+}
+```
+
+#### 5. 根据客户查询方案
+- **请求方式**: GET
+- **请求路径**: `/api/plan/customer/{customer}`
+
+#### 6. 根据状态查询方案
+- **请求方式**: GET
+- **请求路径**: `/api/plan/status/{releaseStatus}`
+
+#### 7. 新增方案
+- **请求方式**: POST
+- **请求路径**: `/api/plan`
+- **请求体**:
+```json
+{
+    "planNo": "PLAN001",
+    "planName": "春季品牌推广方案",
+    "customer": "某某科技有限公司",
+    "releaseDateBegin": "2024-03-01",
+    "releaseDateEnd": "2024-05-31",
+    "releaseStatus": 3,
+    "salesType": 1,
+    "mediaRequirements": "需要在高端社区投放"
+}
+```
+
+#### 8. 更新方案
+- **请求方式**: PUT
+- **请求路径**: `/api/plan`
+
+#### 9. 删除方案
+- **请求方式**: DELETE
+- **请求路径**: `/api/plan/{id}`
+
+### 五、方案社区关联管理 (Plan Community)
+
+**基础路径**: `/api/plan-community`
+
+#### 1. 根据方案查询关联
+- **请求方式**: GET
+- **请求路径**: `/api/plan-community/plan/{planId}`
+
+#### 2. 新增关联
+- **请求方式**: POST
+- **请求路径**: `/api/plan-community`
+- **请求体**:
+```json
+{
+    "planId": 1,
+    "communityId": 1,
+    "releaseDateBegin": "2024-03-01",
+    "releaseDateEnd": "2024-05-31",
+    "barrierRequiredQty": 2,
+    "frameRequiredQty": 5
+}
+```
+
+### 六、方案道闸明细管理 (Plan Barrier)
+
+**基础路径**: `/api/plan-barrier`
+
+#### 1. 根据方案查询明细
+- **请求方式**: GET
+- **请求路径**: `/api/plan-barrier/plan/{planId}`
+
+#### 2. 根据方案社区查询明细
+- **请求方式**: GET
+- **请求路径**: `/api/plan-barrier/plan-community/{planCommunityId}`
+
+#### 3. 新增明细
+- **请求方式**: POST
+- **请求路径**: `/api/plan-barrier`
+- **请求体**:
+```json
+{
+    "planId": 1,
+    "barrierGateId": 1,
+    "planCommunityId": 1,
+    "releaseDateBegin": "2024-03-01",
+    "releaseDateEnd": "2024-05-31",
+    "releaseStatus": 4
+}
+```
+
+#### 4. 删除明细
+- **请求方式**: DELETE
+- **请求路径**: `/api/plan-barrier/{id}`
+
+### 七、方案框架明细管理 (Plan Frame)
+
+#### 1. 根据方案查询明细
+- **请求方式**: GET
+- **请求路径**: `/api/plan-frame/plan/{planId}`
+
+#### 2. 根据方案社区查询明细
+- **请求方式**: GET
+- **请求路径**: `/api/plan-frame/plan-community/{planCommunityId}`
+
+#### 3. 新增明细
+- **请求方式**: POST
+- **请求路径**: `/api/plan-frame`
+- **请求体**:
+```json
+{
+    "planId": 1,
+    "frameId": 1,
+    "planCommunityId": 1,
+    "releaseDateBegin": "2024-03-01",
+    "releaseDateEnd": "2024-05-31",
+    "releaseStatus": 4
+}
+```
+
+#### 4. 删除明细
+- **请求方式**: DELETE
+- **请求路径**: `/api/plan-frame/{id}`
+
+---
+
+### 八、DSL Agent 智能点位选择 (V2)
+
+**基础路径**: `/api/agent/v2`
+
+#### 1. DSL点位选择
+- **请求方式**: POST
+- **请求路径**: `/api/agent/v2/select-points`
+- **功能**: 基于DSL执行复杂点位筛选
+- **请求体**:
+```json
+{
+    "mediaType": "barrier",
+    "targetCount": 100,
+    "dateRange": {
+        "beginDate": "2025-03-01",
+        "endDate": "2025-03-31"
+    },
+    "distributionStrategy": {
+        "type": "per_community",
+        "perCommunityCount": 2,
+        "maxCommunities": 50,
+        "minCommunities": 0
+    },
+    "filterConditions": {
+        "communityIds": [1, 2, 3],
+        "city": "南京市",
+        "district": "鼓楼区",
+        "devicePosition": "entrance",
+        "onlyAvailable": true,
+        "excludeOccupied": true
+    },
+    "limitConditions": {
+        "maxResults": 100,
+        "maxPerCommunity": 2
+    }
+}
+```
+- **响应**:
+```json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+        "success": true,
+        "totalCount": 100,
+        "targetCount": 100,
+        "communityCount": 50,
+        "isComplete": true,
+        "message": "成功选择 100 个点位（目标 100 个），覆盖 50 个社区",
+        "points": [
+            {
+                "pointId": 1,
+                "pointNo": "GATE001",
+                "communityId": 1,
+                "communityName": "万科翡翠公园",
+                "mediaType": "barrier",
+                "details": {
+                    "deviceNo": "DEV001",
+                    "doorLocation": "南门",
+                    "devicePosition": "1"
+                }
+            }
+        ],
+        "pointsByCommunity": {
+            "1": [...]
+        }
+    }
+}
+```
+
+#### 2. 自然语言点位选择
+- **请求方式**: POST
+- **请求路径**: `/api/agent/v2/nlp-select`
+- **功能**: 自然语言解析为DSL并执行点位选择
+- **请求体**:
+```json
+{
+    "message": "选3月份档期内的100面道闸，每个楼盘2个，优先选进口，要空闲的",
+    "sessionId": "optional-session-id"
+}
+```
+
+#### 3. 查询社区可用点位统计
+- **请求方式**: POST
+- **请求路径**: `/api/agent/v2/community-availability`
+- **功能**: 查询各社区可用点位数量
+- **请求体**:
+```json
+{
+    "beginDate": "2025-03-01",
+    "endDate": "2025-03-31",
+    "city": "南京市",
+    "district": "鼓楼区"
+}
+```
+- **响应**:
+```json
+{
+    "code": 200,
+    "data": [
+        {
+            "communityId": 1,
+            "communityName": "万科翡翠公园",
+            "city": "南京市",
+            "district": "鼓楼区",
+            "availableBarrierCount": 5,
+            "availableFrameCount": 10
+        }
+    ]
+}
+```
+
+#### 4. 检查档期冲突
+- **请求方式**: POST
+- **请求路径**: `/api/agent/v2/check-conflicts`
+- **功能**: 检查指定点位的档期冲突
+- **请求体**:
+```json
+{
+    "pointIds": [1, 2, 3],
+    "mediaType": "barrier",
+    "beginDate": "2025-03-01",
+    "endDate": "2025-03-31"
+}
+```
+
+---
+
+## 📊 枚举值说明
+
+### 设备位置 (devicePosition)
+| 值 | 说明 |
+|----|------|
+| 1 | 进口 |
+| 2 | 出口 |
+| 3 | 进出口 |
+
+### 画面位置 (screenPosition)
+| 值 | 说明 |
+|----|------|
+| 1 | A |
+| 2 | B |
+
+### 灯箱朝向 (lightboxDirection)
+| 值 | 说明 |
+|----|------|
+| 1 | 朝外 |
+| 2 | 朝内 |
+| 3 | 临街面 |
+
+### 梯内位置 (innerPosition)
+| 值 | 说明 |
+|----|------|
+| 1 | 左 |
+| 2 | 中 |
+| 3 | 右 |
+
+### 方案发布状态 (releaseStatus)
+| 值 | 说明 |
+|----|------|
+| 1 | 意向 |
+| 2 | 锁位 |
+| 3 | 执行中 |
+| 4 | 执行完毕 |
+| 5 | 档 |
+
+### 销售类型 (salesType)
+| 值 | 说明 |
+|----|------|
+| 1 | 销售 |
+| 2 | 公益 |
+| 3 | 置换 |
+| 4 | 赠送 |
+| 5 | 余位 |
+| 6 | 其他 |
+
+### 明细发布状态 (releaseStatus)
+| 值 | 说明 |
+|----|------|
+| 1 | 意向 |
+| 2 | 锁位 |
+| 3 | 待刊发 |
+| 4 | 刊发中 |
+| 5 | 可调 |
+| 6 | 到期 |
+| 7 | 已下刊 |
+
+---
 
 ## 🗄️ 数据库表
 
@@ -300,37 +1062,34 @@ Content-Type: application/json
 - `plan_frame` - 方案-框架明细
 - `agent_session` - AI 对话会话
 
-## 🔧 配置说明
+## 🔧 其他配置
 
-### application.yml
+### MyBatis 配置
 
 ```yaml
-server:
-  port: 16000
-
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: your_password
-    hikari:
-      minimum-idle: 5
-      maximum-pool-size: 20
-      connection-timeout: 60000
-
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.advertising.entity
   configuration:
     map-underscore-to-camel-case: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    multiple-result-sets-enabled: true
+    use-column-label: true
+    use-generated-keys: true
+    default-executor-type: simple
+    default-statement-timeout: 25000
+```
 
-# Kimi AI 配置（可选）
-kimi:
-  api:
-    key: your_kimi_api_key
-    endpoint: https://api.moonshot.cn/v1/chat/completions
-    model: moonshot-v1-8k
+### 日志配置
+
+```yaml
+logging:
+  level:
+    com.advertising.mapper: debug
+    org.springframework.web: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 ```
 
 ## 🐛 常见问题

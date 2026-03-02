@@ -1,14 +1,11 @@
 package com.advertising.entity;
 
-import lombok.Data;
-
 import java.io.Serializable;
 
 /**
  * 道闸设备实体类
  * 对应数据库表：barrier_gate
  */
-@Data
 public class BarrierGate implements Serializable {
     
     private static final long serialVersionUID = 1L;
@@ -31,4 +28,77 @@ public class BarrierGate implements Serializable {
     
     // 关联对象
     private Community community;
+
+    // Getters and Setters
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getGateNo() {
+        return gateNo;
+    }
+
+    public void setGateNo(String gateNo) {
+        this.gateNo = gateNo;
+    }
+
+    public Integer getCommunityId() {
+        return communityId;
+    }
+
+    public void setCommunityId(Integer communityId) {
+        this.communityId = communityId;
+    }
+
+    public String getDeviceNo() {
+        return deviceNo;
+    }
+
+    public void setDeviceNo(String deviceNo) {
+        this.deviceNo = deviceNo;
+    }
+
+    public String getDoorLocation() {
+        return doorLocation;
+    }
+
+    public void setDoorLocation(String doorLocation) {
+        this.doorLocation = doorLocation;
+    }
+
+    public Integer getDevicePosition() {
+        return devicePosition;
+    }
+
+    public void setDevicePosition(Integer devicePosition) {
+        this.devicePosition = devicePosition;
+    }
+
+    public Integer getScreenPosition() {
+        return screenPosition;
+    }
+
+    public void setScreenPosition(Integer screenPosition) {
+        this.screenPosition = screenPosition;
+    }
+
+    public Integer getLightboxDirection() {
+        return lightboxDirection;
+    }
+
+    public void setLightboxDirection(Integer lightboxDirection) {
+        this.lightboxDirection = lightboxDirection;
+    }
+
+    public Community getCommunity() {
+        return community;
+    }
+
+    public void setCommunity(Community community) {
+        this.community = community;
+    }
 }

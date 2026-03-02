@@ -32,6 +32,9 @@ public class KimiAgentService {
     @Value("${kimi.api.model:kimi-latest}")
     private String model;
     
+    @Value("${kimi.api.thinking:enabled}")
+    private String thinkingMode;
+    
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     
@@ -104,12 +107,16 @@ public class KimiAgentService {
     }
     
     /**
-     * 调用 Kimi API
+     * 调用 Kimi API (K2.5)
      */
     private String callKimiApi(String prompt) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
+        
+        // 构建请求体，支持 thinking 模式控制
+        Map<String, Object> thinkingConfig = Map.of("type", "disabled".equals(thinkingMode) ? "disabled" : "enabled");
+        Map<String, Object> extraBody = Map.of("thinking", thinkingConfig);
         
         Map<String, Object> requestBody = Map.of(
             "model", model,
@@ -118,7 +125,8 @@ public class KimiAgentService {
                 Map.of("role", "user", "content", prompt)
             ),
             "temperature", 0.3,
-            "response_format", Map.of("type", "json_object")
+            "response_format", Map.of("type", "json_object"),
+            "extra_body", extraBody
         );
         
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);

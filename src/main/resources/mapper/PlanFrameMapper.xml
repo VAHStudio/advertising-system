@@ -200,5 +200,11 @@
     <delete id="deleteByFrameId">
         DELETE FROM plan_frame WHERE frame_id = #{frameId}
     </delete>
-    
+
+    <select id="countByPlanId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM plan_frame
+        WHERE plan_id = #{planId}
+    </select>
+
 </mapper>

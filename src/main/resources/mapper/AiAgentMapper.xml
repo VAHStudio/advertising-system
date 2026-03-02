@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.agent.mapper.AiAgentMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.agent.entity.AiAgent">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="role" property="role"/>
+        <result column="title" property="title"/>
+        <result column="avatar" property="avatar"/>
+        <result column="description" property="description"/>
+        <result column="welcome_message" property="welcomeMessage"/>
+        <result column="system_prompt" property="systemPrompt"/>
+        <result column="capabilities" property="capabilities"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    
+</mapper>

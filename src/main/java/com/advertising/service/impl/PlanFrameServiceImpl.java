@@ -6,7 +6,7 @@ import com.advertising.mapper.PlanFrameMapper;
 import com.advertising.service.PlanFrameService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +16,14 @@ import java.util.List;
  * 方案框架明细服务实现类
  */
 @Service
-@RequiredArgsConstructor
 public class PlanFrameServiceImpl implements PlanFrameService {
     
     private final PlanFrameMapper planFrameMapper;
+    
+    @Autowired
+    public PlanFrameServiceImpl(PlanFrameMapper planFrameMapper) {
+        this.planFrameMapper = planFrameMapper;
+    }
     
     /**
      * {@inheritDoc}

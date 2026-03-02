@@ -6,7 +6,7 @@ import com.advertising.mapper.PlanCommunityMapper;
 import com.advertising.service.PlanCommunityService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +16,14 @@ import java.util.List;
  * 方案社区关联服务实现类
  */
 @Service
-@RequiredArgsConstructor
 public class PlanCommunityServiceImpl implements PlanCommunityService {
     
     private final PlanCommunityMapper planCommunityMapper;
+    
+    @Autowired
+    public PlanCommunityServiceImpl(PlanCommunityMapper planCommunityMapper) {
+        this.planCommunityMapper = planCommunityMapper;
+    }
     
     /**
      * {@inheritDoc}

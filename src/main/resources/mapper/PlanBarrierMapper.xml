@@ -199,5 +199,11 @@
     <delete id="deleteByBarrierGateId">
         DELETE FROM plan_barrier WHERE barrier_gate_id = #{barrierGateId}
     </delete>
-    
+
+    <select id="countByPlanId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM plan_barrier
+        WHERE plan_id = #{planId}
+    </select>
+
 </mapper>

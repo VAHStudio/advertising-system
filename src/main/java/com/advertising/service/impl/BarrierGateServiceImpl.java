@@ -6,7 +6,7 @@ import com.advertising.mapper.BarrierGateMapper;
 import com.advertising.service.BarrierGateService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +16,14 @@ import java.util.List;
  * 道闸设备服务实现类
  */
 @Service
-@RequiredArgsConstructor
 public class BarrierGateServiceImpl implements BarrierGateService {
-    
+
     private final BarrierGateMapper barrierGateMapper;
+
+    @Autowired
+    public BarrierGateServiceImpl(BarrierGateMapper barrierGateMapper) {
+        this.barrierGateMapper = barrierGateMapper;
+    }
     
     /**
      * {@inheritDoc}

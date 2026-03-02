@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.agent.mapper.AiConversationMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.agent.entity.AiConversation">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="agent_id" property="agentId"/>
+        <result column="agent_name" property="agentName"/>
+        <result column="agent_avatar" property="agentAvatar"/>
+        <result column="title" property="title"/>
+        <result column="context" property="context"/>
+        <result column="status" property="status"/>
+        <result column="message_count" property="messageCount"/>
+        <result column="last_message_at" property="lastMessageAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    
+</mapper>

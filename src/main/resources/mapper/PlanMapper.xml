@@ -12,11 +12,13 @@
         <result column="release_status" property="releaseStatus"/>
         <result column="sales_type" property="salesType"/>
         <result column="media_requirements" property="mediaRequirements"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
-    
+
     <sql id="Base_Column_List">
-        id, plan_no, plan_name, customer, release_date_begin, release_date_end, 
-        release_status, sales_type, media_requirements
+        id, plan_no, plan_name, customer, release_date_begin, release_date_end,
+        release_status, sales_type, media_requirements, created_at, updated_at
     </sql>
     
     <select id="selectById" resultMap="BaseResultMap">
@@ -34,7 +36,7 @@
     <select id="selectAll" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM plan
-        ORDER BY id DESC
+        ORDER BY updated_at DESC
     </select>
     
     <select id="selectList" resultMap="BaseResultMap">
@@ -63,7 +65,7 @@
                 AND release_date_end &lt;= #{releaseDateEnd}
             </if>
         </where>
-        ORDER BY id DESC
+        ORDER BY updated_at DESC
     </select>
     
     <select id="count" resultType="java.lang.Long">
@@ -98,14 +100,14 @@
         SELECT <include refid="Base_Column_List"/>
         FROM plan
         WHERE customer = #{customer}
-        ORDER BY id DESC
+        ORDER BY updated_at DESC
     </select>
-    
+
     <select id="selectByReleaseStatus" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM plan
         WHERE release_status = #{releaseStatus}
-        ORDER BY id DESC
+        ORDER BY updated_at DESC
     </select>
     
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

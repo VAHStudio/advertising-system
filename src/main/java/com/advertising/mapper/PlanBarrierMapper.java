@@ -126,4 +126,11 @@ public interface PlanBarrierMapper {
      * @return 影响行数
      */
     int deleteByBarrierGateId(Integer barrierGateId);
+    
+    /**
+     * 根据方案ID统计道闸数量
+     * @param planId 方案ID
+     * @return 数量
+     */
+    int countByPlanId(Integer planId);
 }

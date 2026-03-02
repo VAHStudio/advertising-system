@@ -6,7 +6,7 @@ import com.advertising.mapper.PlanBarrierMapper;
 import com.advertising.service.PlanBarrierService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +16,14 @@ import java.util.List;
  * 方案道闸明细服务实现类
  */
 @Service
-@RequiredArgsConstructor
 public class PlanBarrierServiceImpl implements PlanBarrierService {
     
     private final PlanBarrierMapper planBarrierMapper;
+    
+    @Autowired
+    public PlanBarrierServiceImpl(PlanBarrierMapper planBarrierMapper) {
+        this.planBarrierMapper = planBarrierMapper;
+    }
     
     /**
      * {@inheritDoc}

@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Camera,
   Lock,
+  Loader2,
   Share2,
   Filter,
   ArrowRight,
@@ -324,7 +325,7 @@ const WorkbenchView = ({ onNavigate }: { onNavigate: (view: ViewType) => void })
               { icon: <Users />, label: '客户管理' },
               { icon: <MapIcon />, label: '媒体点位' },
               { icon: <TrendingUp />, label: '财务报表' },
-              { icon: <Plus />, label: '营销工具', view: 'chat' },
+              { icon: <Plus />, label: '驾驶舱', view: 'chat' },
               { icon: <Settings />, label: '设置' },
             ].map((item, i) => (
               <button 
@@ -509,7 +510,125 @@ const ChatView = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-const CampaignListView = ({ onBack, onSelect }: { onBack: () => void, onSelect: () => void }) => {
+const CampaignListView = ({ onBack, onSelect }: { onBack: () => void, onSelect: (planId: number) => void }) => {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('全部');
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/plan/list');
+      const result = await response.json();
+      
+      if (result.code === 200) {
+        // 转换数据格式
+        const formattedPlans = result.data.map((plan: any) => ({
+          id: plan.id,
+          title: plan.planName || '未命名方案',
+          customer: plan.customer || '未知客户',
+          status: getStatusText(plan.releaseStatus),
+          statusCode: plan.releaseStatus,
+          time: formatTimeAgo(plan.updatedAt || plan.createdAt),
+          budget: formatBudget(plan.budget),
+          reach: formatReach(plan.estimatedReach),
+          image: plan.sampleImage || null,
+          salesPerson: plan.salesPerson || '未分配销售',
+          releaseDateBegin: plan.releaseDateBegin,
+          releaseDateEnd: plan.releaseDateEnd,
+          mediaType: plan.mediaType,
+          mediaCount: plan.mediaCount || 0,
+        }));
+        setPlans(formattedPlans);
+      } else {
+        setError('获取方案列表失败');
+      }
+    } catch (err) {
+      setError('网络错误，请稍后重试');
+      console.error('加载方案列表失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusText = (status: number) => {
+    const statusMap: Record<number, string> = {
+      1: '意向',
+      2: '锁位',
+      3: '进行中',
+      4: '已结案',
+      5: '档',
+    };
+    return statusMap[status] || '草稿';
+  };
+
+  const getStatusColor = (status: number) => {
+    const colorMap: Record<number, string> = {
+      1: 'bg-slate-500',
+      2: 'bg-yellow-500',
+      3: 'bg-primary',
+      4: 'bg-green-500',
+      5: 'bg-red-500',
+    };
+    return colorMap[status] || 'bg-slate-500';
+  };
+
+  const formatBudget = (budget?: number) => {
+    if (!budget) return '¥0';
+    if (budget >= 1000000) return `¥${(budget / 1000000).toFixed(1)}M`;
+    if (budget >= 1000) return `¥${(budget / 1000).toFixed(0)}k`;
+    return `¥${budget}`;
+  };
+
+  const formatReach = (reach?: number) => {
+    if (!reach) return '0';
+    if (reach >= 1000000) return `${(reach / 1000000).toFixed(1)}M+`;
+    if (reach >= 1000) return `${(reach / 1000).toFixed(0)}k+`;
+    return `${reach}+`;
+  };
+
+  const formatTimeAgo = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 60) return `${minutes}分钟前`;
+    if (hours < 24) return `${hours}小时前`;
+    if (days < 30) return `${days}天前`;
+    return date.toLocaleDateString('zh-CN');
+  };
+
+  const getMediaTypeText = (mediaType?: number) => {
+    const typeMap: Record<number, string> = {
+      1: '道闸',
+      2: '框架',
+    };
+    return typeMap[mediaType || 0] || '未选择';
+  };
+
+  const getMediaTypeColor = (mediaType?: number) => {
+    const colorMap: Record<number, string> = {
+      1: 'bg-blue-100 text-blue-600',
+      2: 'bg-purple-100 text-purple-600',
+    };
+    return colorMap[mediaType || 0] || 'bg-slate-100 text-slate-500';
+  };
+
+  const filteredPlans = activeTab === '全部' 
+    ? plans 
+    : plans.filter(p => p.status === activeTab);
+
+  const tabs = ['全部', '进行中', '审批中', '草稿', '已结案'];
+
   return (
     <div className="flex flex-col h-full bg-[#f8f9fb] dark:bg-background-dark">
       <header className="sticky top-0 z-50 flex items-center bg-white/95 dark:bg-background-dark/95 backdrop-blur-md p-4 pb-2 justify-between border-b border-slate-100 dark:border-slate-800">
@@ -535,60 +654,423 @@ const CampaignListView = ({ onBack, onSelect }: { onBack: () => void, onSelect: 
         </div>
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4">
-          {['全部', '进行中', '审批中', '草稿', '已结案'].map((tab, i) => (
-            <button key={i} className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${i === 0 ? 'bg-primary text-white' : 'bg-white dark:bg-surface-dark text-slate-500 border border-slate-100 dark:border-slate-800'}`}>
+          {tabs.map((tab) => (
+            <button 
+              key={tab} 
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab 
+                  ? 'bg-primary text-white' 
+                  : 'bg-white dark:bg-surface-dark text-slate-500 border border-slate-100 dark:border-slate-800'
+              }`}
+            >
               {tab}
             </button>
           ))}
         </div>
 
-        <div className="space-y-4">
-          {[
-            { title: '南京地区季度战略投放方案', status: '草稿', time: '2小时前', budget: '¥1.2M', reach: '4.5M+', image: 'https://picsum.photos/seed/n1/400/200' },
-            { title: '市中心LED大屏广告投放方案_V3', status: '审批中', time: '10分钟前', budget: '¥800k', reach: '2.1M+', image: 'https://picsum.photos/seed/n2/400/200' },
-            { title: '可口可乐2月南京投放方案', status: '进行中', time: '1天前', budget: '¥200k', reach: '800k+', image: 'https://picsum.photos/seed/n3/400/200' },
-            { title: '华盛地产年度投放合同续约', status: '草稿', time: '昨天', budget: '¥2.5M', reach: '10M+', image: 'https://picsum.photos/seed/n4/400/200' },
-          ].map((item, i) => (
-            <div 
-              key={i} 
-              onClick={onSelect}
-              className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 size={32} className="animate-spin text-primary mb-4" />
+            <p className="text-slate-400">加载中...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 mb-4">{error}</p>
+            <button 
+              onClick={loadPlans}
+              className="px-4 py-2 bg-primary text-white rounded-lg"
             >
-              <div className="h-32 w-full relative">
-                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                <div className="absolute top-3 right-3">
-                  <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${
-                    item.status === '审批中' ? 'bg-orange-500 text-white' : 
-                    item.status === '进行中' ? 'bg-primary text-white' : 'bg-slate-500 text-white'
-                  }`}>{item.status}</span>
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-base mb-2 line-clamp-1">{item.title}</h3>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-4">
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-medium uppercase">预算</p>
-                      <p className="text-sm font-bold text-primary">{item.budget}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-medium uppercase">预计触达</p>
-                      <p className="text-sm font-bold">{item.reach}</p>
+              重试
+            </button>
+          </div>
+        ) : filteredPlans.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-slate-400">暂无方案数据</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredPlans.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => onSelect(item.id)}
+                className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+              >
+                {/* 有图片才显示图片区域 */}
+                {item.image && (
+                  <div className="h-32 w-full relative">
+                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    <div className="absolute top-3 right-3">
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${getStatusColor(item.statusCode)} text-white`}>
+                        {item.status}
+                      </span>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400">{item.time}</p>
+                )}
+                
+                <div className="p-4">
+                  {/* 如果没有图片，状态标签放在标题旁边 */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-bold text-base line-clamp-1 flex-1">{item.title}</h3>
+                    {!item.image && (
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${getStatusColor(item.statusCode)} text-white shrink-0`}>
+                        {item.status}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* 显示客户和销售人员 */}
+                  <div className="flex items-center gap-2 mb-2 text-sm text-slate-500">
+                    <span>{item.customer}</span>
+                    <span className="text-slate-300">|</span>
+                    <span className="flex items-center gap-1">
+                      <User size={12} />
+                      {item.salesPerson}
+                    </span>
+                  </div>
+
+                  {/* 显示媒体类型和数量 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`text-xs px-2 py-1 rounded font-medium ${getMediaTypeColor(item.mediaType)}`}>
+                      {getMediaTypeText(item.mediaType)}
+                    </span>
+                    {item.mediaCount > 0 && (
+                      <span className="text-xs text-slate-500">
+                        已选 {item.mediaCount} 个点位
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase">预算</p>
+                        <p className="text-sm font-bold text-primary">{item.budget}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase">预计触达</p>
+                        <p className="text-sm font-bold">{item.reach}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400">{item.time}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
 };
 
-const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
+const CampaignDetailView = ({ planId, onBack }: { planId: number; onBack: () => void }) => {
   const [mode, setMode] = useState<'list' | 'map'>('list');
+  const [plan, setPlan] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedPoints, setSelectedPoints] = useState<any[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [availablePoints, setAvailablePoints] = useState<any[]>([]);
+  const [selectedNewPoints, setSelectedNewPoints] = useState<number[]>([]);
+  const [filterText, setFilterText] = useState('');
+  const [expandedCommunities, setExpandedCommunities] = useState<Set<number>>(new Set());
+  const [groupedPoints, setGroupedPoints] = useState<Map<number, any[]>>(new Map());
+  const [addStep, setAddStep] = useState<'community' | 'point'>('community');
+  const [selectedCommunities, setSelectedCommunities] = useState<number[]>([]);
+  const [availableCommunities, setAvailableCommunities] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadPlanDetail();
+  }, [planId]);
+
+  useEffect(() => {
+    if (plan) {
+      loadSelectedPoints();
+    }
+  }, [plan]);
+
+  const loadPlanDetail = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/plan/${planId}`);
+      const result = await response.json();
+      
+      if (result.code === 200) {
+        setPlan(result.data);
+      } else {
+        setError('获取方案详情失败');
+      }
+    } catch (err) {
+      setError('网络错误，请稍后重试');
+      console.error('加载方案详情失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSelectedPoints = async () => {
+    try {
+      let points: any[] = [];
+      if (plan.mediaType === 1) {
+        const response = await fetch(`/api/plan-barrier/plan/${planId}`);
+        const result = await response.json();
+        if (result.code === 200) {
+          points = result.data || [];
+        }
+      } else if (plan.mediaType === 2) {
+        const response = await fetch(`/api/plan-frame/plan/${planId}`);
+        const result = await response.json();
+        if (result.code === 200) {
+          points = result.data || [];
+        }
+      }
+      
+      setSelectedPoints(points);
+      
+      // 按社区分组
+      const grouped = new Map<number, any[]>();
+      points.forEach((point: any) => {
+        const communityId = plan.mediaType === 1 
+          ? point.barrierGate?.communityId 
+          : point.frame?.communityId;
+        if (communityId) {
+          if (!grouped.has(communityId)) {
+            grouped.set(communityId, []);
+          }
+          grouped.get(communityId)?.push(point);
+        }
+      });
+      setGroupedPoints(grouped);
+      
+      // 默认展开所有社区
+      setExpandedCommunities(new Set(grouped.keys()));
+    } catch (err) {
+      console.error('加载点位失败:', err);
+    }
+  };
+
+  const toggleCommunity = (communityId: number) => {
+    const newExpanded = new Set(expandedCommunities);
+    if (newExpanded.has(communityId)) {
+      newExpanded.delete(communityId);
+    } else {
+      newExpanded.add(communityId);
+    }
+    setExpandedCommunities(newExpanded);
+  };
+
+  const openAddModal = async () => {
+    try {
+      setShowAddModal(true);
+      setAddStep('community');
+      setSelectedCommunities([]);
+      setSelectedNewPoints([]);
+      setFilterText('');
+      
+      // 加载所有社区
+      const response = await fetch('/api/community/list');
+      const result = await response.json();
+      if (result.code === 200) {
+        // 过滤掉已有选点的社区
+        const existingCommunityIds = Array.from(groupedPoints.keys());
+        setAvailableCommunities((result.data || []).filter((c: any) => !existingCommunityIds.includes(c.id)));
+      }
+    } catch (err) {
+      console.error('加载社区失败:', err);
+    }
+  };
+
+  const proceedToSelectPoints = () => {
+    if (selectedCommunities.length === 0) {
+      alert('请至少选择一个社区');
+      return;
+    }
+    setAddStep('point');
+    loadAvailablePointsForCommunities();
+  };
+
+  const loadAvailablePointsForCommunities = async () => {
+    try {
+      let allPoints: any[] = [];
+      
+      for (const communityId of selectedCommunities) {
+        if (plan.mediaType === 1) {
+          const response = await fetch(`/api/barrier-gate/community/${communityId}`);
+          const result = await response.json();
+          if (result.code === 200) {
+            allPoints = [...allPoints, ...(result.data || []).map((p: any) => ({...p, communityId}))];
+          }
+        } else if (plan.mediaType === 2) {
+          const response = await fetch(`/api/frame/community/${communityId}`);
+          const result = await response.json();
+          if (result.code === 200) {
+            allPoints = [...allPoints, ...(result.data || []).map((p: any) => ({...p, communityId}))];
+          }
+        }
+      }
+      
+      // 过滤掉已选择的
+      const selectedIds = selectedPoints.map((p: any) => 
+        plan.mediaType === 1 ? p.barrierGateId : p.frameId
+      );
+      setAvailablePoints(allPoints.filter((p: any) => !selectedIds.includes(p.id)));
+    } catch (err) {
+      console.error('加载点位失败:', err);
+    }
+  };
+
+  const addSelectedPoints = async () => {
+    try {
+      // 添加选中的具体点位
+      const pointsToAdd = availablePoints.filter((p: any) => selectedNewPoints.includes(p.id));
+      
+      for (const point of pointsToAdd) {
+        if (plan.mediaType === 1) {
+          await fetch('/api/plan-barrier', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              planId: planId,
+              barrierGateId: point.id,
+              releaseDateBegin: plan.releaseDateBegin,
+              releaseDateEnd: plan.releaseDateEnd,
+              releaseStatus: 1
+            })
+          });
+        } else if (plan.mediaType === 2) {
+          await fetch('/api/plan-frame', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              planId: planId,
+              frameId: point.id,
+              releaseDateBegin: plan.releaseDateBegin,
+              releaseDateEnd: plan.releaseDateEnd,
+              releaseStatus: 1
+            })
+          });
+        }
+      }
+      
+      setShowAddModal(false);
+      setAddStep('community');
+      setSelectedCommunities([]);
+      setSelectedNewPoints([]);
+      loadSelectedPoints();
+      loadPlanDetail();
+    } catch (err) {
+      console.error('添加点位失败:', err);
+      alert('添加点位失败');
+    }
+  };
+
+  const removePoint = async (pointId: number) => {
+    if (!confirm('确定要删除这个点位吗？')) return;
+    
+    try {
+      if (plan.mediaType === 1) {
+        await fetch(`/api/plan-barrier/${pointId}`, { method: 'DELETE' });
+      } else if (plan.mediaType === 2) {
+        await fetch(`/api/plan-frame/${pointId}`, { method: 'DELETE' });
+      }
+      loadSelectedPoints();
+      loadPlanDetail();
+    } catch (err) {
+      console.error('删除点位失败:', err);
+      alert('删除点位失败');
+    }
+  };
+
+  const expandAll = () => {
+    setExpandedCommunities(new Set(groupedPoints.keys()));
+  };
+
+  const collapseAll = () => {
+    setExpandedCommunities(new Set());
+  };
+
+  const getStatusText = (status: number) => {
+    const statusMap: Record<number, string> = {
+      1: '意向',
+      2: '锁位',
+      3: '执行中',
+      4: '已结案',
+      5: '档',
+    };
+    return statusMap[status] || '草稿';
+  };
+
+  const getStatusColor = (status: number) => {
+    const colorMap: Record<number, string> = {
+      1: 'bg-slate-500',
+      2: 'bg-yellow-500',
+      3: 'bg-primary',
+      4: 'bg-green-500',
+      5: 'bg-red-500',
+    };
+    return colorMap[status] || 'bg-slate-500';
+  };
+
+  const getMediaTypeText = (mediaType?: number) => {
+    const typeMap: Record<number, string> = {
+      1: '道闸',
+      2: '框架',
+    };
+    return typeMap[mediaType || 0] || '未选择';
+  };
+
+  const getMediaTypeColor = (mediaType?: number) => {
+    const colorMap: Record<number, string> = {
+      1: 'bg-blue-100 text-blue-600',
+      2: 'bg-purple-100 text-purple-600',
+    };
+    return colorMap[mediaType || 0] || 'bg-slate-100 text-slate-500';
+  };
+  const formatBudget = (budget?: number) => {
+    if (!budget) return '¥0';
+    if (budget >= 1000000) return `¥${(budget / 1000000).toFixed(1)}M`;
+    if (budget >= 1000) return `¥${(budget / 1000).toFixed(0)}k`;
+    return `¥${budget}`;
+  };
+
+  const formatReach = (reach?: number) => {
+    if (!reach) return '0';
+    if (reach >= 1000000) return `${(reach / 1000000).toFixed(1)}M+`;
+    if (reach >= 1000) return `${(reach / 1000).toFixed(0)}k+`;
+    return `${reach}+`;
+  };
+
+  const calculateDays = (begin?: string, end?: string) => {
+    if (!begin || !end) return '30天';
+    const start = new Date(begin);
+    const end_date = new Date(end);
+    const diff = Math.ceil((end_date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return `${diff}天`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full bg-[#f8f9fb] dark:bg-background-dark items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-primary mb-4" />
+        <p className="text-slate-400">加载中...</p>
+      </div>
+    );
+  }
+
+  if (error || !plan) {
+    return (
+      <div className="flex flex-col h-full bg-[#f8f9fb] dark:bg-background-dark items-center justify-center">
+        <p className="text-red-500 mb-4">{error || '方案不存在'}</p>
+        <button 
+          onClick={onBack}
+          className="px-4 py-2 bg-primary text-white rounded-lg"
+        >
+          返回列表
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#f8f9fb] dark:bg-background-dark">
@@ -596,7 +1078,7 @@ const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
         <button onClick={onBack} className="size-12 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-lg font-bold flex-1 text-center">南京投放方案详情</h2>
+        <h2 className="text-lg font-bold flex-1 text-center">方案详情</h2>
         <button className="size-12 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <Share2 size={24} />
         </button>
@@ -605,20 +1087,27 @@ const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
       <main className="flex-1 overflow-y-auto pb-32 no-scrollbar">
         <div className="px-4 pt-6 pb-2">
           <div className="flex items-center gap-3 mb-2">
-            <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded tracking-wider uppercase">草稿</span>
-            <span className="text-slate-400 text-xs font-medium">更新于 2小时前</span>
+            <span className={`text-white text-xs font-bold px-2 py-1 rounded tracking-wider uppercase ${getStatusColor(plan.releaseStatus)}`}>
+              {getStatusText(plan.releaseStatus)}
+            </span>
+            <span className={`text-xs px-2 py-1 rounded font-medium ${getMediaTypeColor(plan.mediaType)}`}>
+              {getMediaTypeText(plan.mediaType)}
+            </span>
+            <span className="text-slate-400 text-xs font-medium">{plan.planNo}</span>
           </div>
-          <h2 className="text-[28px] font-bold leading-tight">南京地区季度战略投放方案</h2>
-          <p className="text-slate-400 text-sm mt-1">Q3 户外媒体触达计划 • 南京核心商圈及社区</p>
+          <h2 className="text-[28px] font-bold leading-tight">{plan.planName}</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            {plan.customer} • {plan.mediaRequirements || '暂无媒体需求描述'}
+          </p>
         </div>
 
         <div className="px-4 pt-4">
           <h3 className="text-sm font-bold mb-3">总体信息</h3>
           <div className="flex flex-wrap gap-3">
             {[
-              { icon: <DollarSign size={20} />, label: '预算', value: '¥1.2M' },
-              { icon: <TrendingUp size={20} />, label: '预计触达', value: '4.5M+' },
-              { icon: <Calendar size={20} />, label: '周期', value: '30天' },
+              { icon: <DollarSign size={20} />, label: '预算', value: formatBudget(plan.budget) },
+              { icon: <TrendingUp size={20} />, label: '预计触达', value: formatReach(plan.estimatedReach) },
+              { icon: <Calendar size={20} />, label: '周期', value: calculateDays(plan.releaseDateBegin, plan.releaseDateEnd) },
             ].map((item, i) => (
               <div key={i} className="flex min-w-[100px] flex-1 flex-col gap-2 rounded-xl p-4 bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center gap-2">
@@ -628,6 +1117,23 @@ const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
                 <p className="text-xl font-bold leading-tight">{item.value}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="px-4 pt-4">
+          <h3 className="text-sm font-bold mb-3">投放时间</h3>
+          <div className="bg-white dark:bg-surface-dark rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-400">开始日期</p>
+                <p className="text-base font-semibold">{plan.releaseDateBegin || '未设置'}</p>
+              </div>
+              <ArrowRight size={20} className="text-slate-300" />
+              <div className="text-right">
+                <p className="text-xs text-slate-400">结束日期</p>
+                <p className="text-base font-semibold">{plan.releaseDateEnd || '未设置'}</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -652,49 +1158,118 @@ const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
         {mode === 'list' ? (
           <div className="mt-6">
             <div className="flex items-center justify-between px-4 pb-2">
-              <h2 className="text-lg font-bold">南京优质社区 (5)</h2>
-              <button className="text-primary text-sm font-medium flex items-center gap-1">
-                筛选 <Filter size={16} />
-              </button>
+              <div>
+                <h2 className="text-lg font-bold">已选点位</h2>
+                <p className="text-sm text-slate-500">
+                  共 {selectedPoints.length} 个{plan.mediaType === 1 ? '道闸' : '框架'} · {groupedPoints.size} 个社区
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {groupedPoints.size > 0 && (
+                  <div className="flex items-center gap-1 mr-2">
+                    <button 
+                      onClick={expandAll}
+                      className="text-xs px-2 py-1 bg-slate-100 rounded hover:bg-slate-200"
+                    >
+                      展开全部
+                    </button>
+                    <button 
+                      onClick={collapseAll}
+                      className="text-xs px-2 py-1 bg-slate-100 rounded hover:bg-slate-200"
+                    >
+                      收起全部
+                    </button>
+                  </div>
+                )}
+                <button 
+                  onClick={openAddModal}
+                  className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                >
+                  <Plus size={18} /> 添加点位
+                </button>
+              </div>
             </div>
-            <div className="flex flex-col gap-4 px-4 pb-4">
-              {[
-                { title: '御园名邸广场', area: '鼓楼区', price: '15.0万', tags: ['LED大屏', '社区主入口', '首选推荐'], image: 'https://picsum.photos/seed/nanjing1/800/600' },
-                { title: '仙林中心 A座', area: '栖霞区', price: '12.0万', tags: ['电梯海报', '商住两用'], image: 'https://picsum.photos/seed/nanjing2/800/600' },
-                { title: '河西中央公园景观位', area: '建邺区', price: '18.0万', tags: ['户外看板', '交通主干道'], image: 'https://picsum.photos/seed/nanjing3/800/600' },
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col rounded-xl bg-white dark:bg-surface-dark overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm">
-                  <div className="relative h-48 w-full bg-slate-200">
-                    <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-                    {i === 0 && (
-                      <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/80 backdrop-blur px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <TrendingUp size={14} className="text-green-600" /> 高人流量
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-bold text-lg">{item.title}</h3>
-                        <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
-                          <MapIcon size={16} /> 南京市 {item.area}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-primary font-bold text-lg">¥{item.price}</span>
-                        <span className="text-slate-400 text-xs">/ 月</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {item.tags.map((tag, j) => (
-                        <span key={j} className={`px-2 py-1 rounded text-xs font-medium ${tag === '首选推荐' ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+            <div className="px-4 pb-4 space-y-3">
+              {selectedPoints.length === 0 ? (
+                <div className="bg-white dark:bg-surface-dark rounded-xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm text-center">
+                  <p className="text-slate-400 text-sm">暂无点位数据</p>
+                  <p className="text-xs text-slate-300 mt-1">点击右上角添加点位</p>
                 </div>
-              ))}
+              ) : (
+                Array.from(groupedPoints.entries()).map(([communityId, points]) => {
+                  const isExpanded = expandedCommunities.has(communityId);
+                  const communityName = points[0]?.barrierGate?.community?.buildingName || 
+                                       points[0]?.frame?.community?.buildingName || 
+                                       '未知社区';
+                  
+                  return (
+                    <div key={communityId} className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                      {/* 社区标题栏 */}
+                      <div 
+                        onClick={() => toggleCommunity(communityId)}
+                        className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M6 9l6 6 6-6" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-base">{communityName}</h3>
+                            <p className="text-sm text-slate-500">
+                              已选 {points.length} 个{plan.mediaType === 1 ? '道闸' : '框架'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full">
+                            {points.length}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* 展开的点位列表 */}
+                      {isExpanded && (
+                        <div className="border-t border-slate-100 dark:border-slate-800">
+                          {points.map((point: any, index: number) => (
+                            <div 
+                              key={point.id} 
+                              className={`p-4 flex items-start justify-between ${index !== points.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-slate-400 text-xs">{String(index + 1).padStart(2, '0')}</span>
+                                  <h4 className="font-medium text-sm">
+                                    {plan.mediaType === 1 ? point.barrierGate?.gateNo : point.frame?.frameNo}
+                                  </h4>
+                                </div>
+                                <p className="text-slate-500 text-xs ml-6">
+                                  {plan.mediaType === 1 
+                                    ? `${point.barrierGate?.doorLocation || ''} · ${point.barrierGate?.deviceNo || ''}`
+                                    : `${point.frame?.building || ''}栋${point.frame?.unit || ''}单元 · ${point.frame?.elevator || ''}`
+                                  }
+                                </p>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removePoint(point.id);
+                                }}
+                                className="text-red-500 p-1.5 hover:bg-red-50 rounded-full transition-colors"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         ) : (
@@ -704,14 +1279,10 @@ const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
               <div className="relative">
                 <div className="bg-white dark:bg-surface-dark rounded-xl shadow-xl p-3 border border-slate-200 dark:border-slate-800 min-w-[180px] mb-2">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold">万科翡翠公园</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold">精选</span>
+                    <span className="text-xs font-bold">地图模式</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold">开发中</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mb-2">江宁区 · 电梯框架</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-primary">12 个点位</span>
-                    <span className="text-[10px] text-slate-400 font-medium">查看详情 &gt;</span>
-                  </div>
+                  <p className="text-[11px] text-slate-500 mb-2">点位地图展示功能即将上线</p>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center border-4 border-white shadow-lg mx-auto">
                   <MapIcon size={16} className="text-white" />
@@ -721,6 +1292,204 @@ const CampaignDetailView = ({ onBack }: { onBack: () => void }) => {
           </div>
         )}
       </main>
+
+      {/* 添加点位弹窗 */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-end sm:items-center justify-center">
+          <div className="bg-white dark:bg-surface-dark w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold">
+                  {addStep === 'community' ? '选择社区' : `选择${plan?.mediaType === 1 ? '道闸' : '框架'}点位`}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {addStep === 'community' 
+                    ? '请先选择要添加点位的社区' 
+                    : `已选 ${selectedCommunities.length} 个社区，请选择具体点位`
+                  }
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowAddModal(false);
+                  setAddStep('community');
+                  setSelectedCommunities([]);
+                  setSelectedNewPoints([]);
+                }} 
+                className="p-2 hover:bg-slate-100 rounded-full"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  placeholder={addStep === 'community' ? "搜索社区名称..." : "搜索点位编号..."}
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:border-primary"
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                {addStep === 'community' 
+                  ? `已选择 ${selectedCommunities.length} 个社区`
+                  : `已选择 ${selectedNewPoints.length} 个点位`
+                }
+              </p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {addStep === 'community' ? (
+                // 第一步：选择社区
+                availableCommunities
+                  .filter((c: any) => {
+                    if (!filterText) return true;
+                    const searchText = filterText.toLowerCase();
+                    return (c.buildingName || c.communityName || '').toLowerCase().includes(searchText);
+                  })
+                  .map((community: any) => (
+                    <div
+                      key={community.id}
+                      onClick={() => {
+                        if (selectedCommunities.includes(community.id)) {
+                          setSelectedCommunities(selectedCommunities.filter(id => id !== community.id));
+                        } else {
+                          setSelectedCommunities([...selectedCommunities, community.id]);
+                        }
+                      }}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                        selectedCommunities.includes(community.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+                          selectedCommunities.includes(community.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-slate-300'
+                        }`}>
+                          {selectedCommunities.includes(community.id) && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                              <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{community.buildingName || community.communityName}</p>
+                          <p className="text-sm text-slate-500">{community.city} · {community.buildingAddress}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                // 第二步：选择具体点位
+                availablePoints
+                  .filter((p: any) => {
+                    if (!filterText) return true;
+                    const searchText = filterText.toLowerCase();
+                    const pointNo = p.gateNo || p.frameNo || '';
+                    return pointNo.toLowerCase().includes(searchText);
+                  })
+                  .map((point: any) => (
+                    <div
+                      key={point.id}
+                      onClick={() => {
+                        if (selectedNewPoints.includes(point.id)) {
+                          setSelectedNewPoints(selectedNewPoints.filter(id => id !== point.id));
+                        } else {
+                          setSelectedNewPoints([...selectedNewPoints, point.id]);
+                        }
+                      }}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                        selectedNewPoints.includes(point.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+                          selectedNewPoints.includes(point.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-slate-300'
+                        }`}>
+                          {selectedNewPoints.includes(point.id) && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                              <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{point.gateNo || point.frameNo}</p>
+                          {plan?.mediaType === 1 ? (
+                            <p className="text-xs text-slate-400">{point.doorLocation} · {point.deviceNo}</p>
+                          ) : (
+                            <p className="text-xs text-slate-400">{point.building}栋{point.unit}单元 · {point.elevator}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              )}
+              
+              {addStep === 'community' && availableCommunities.filter((c: any) => {
+                if (!filterText) return true;
+                return (c.buildingName || c.communityName || '').toLowerCase().includes(filterText.toLowerCase());
+              }).length === 0 && (
+                <div className="text-center py-8 text-slate-400">
+                  暂无可添加的社区
+                </div>
+              )}
+              
+              {addStep === 'point' && availablePoints.filter((p: any) => {
+                if (!filterText) return true;
+                const pointNo = p.gateNo || p.frameNo || '';
+                return pointNo.toLowerCase().includes(filterText.toLowerCase());
+              }).length === 0 && (
+                <div className="text-center py-8 text-slate-400">
+                  所选社区暂无可用点位
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+              {addStep === 'community' ? (
+                <button
+                  onClick={proceedToSelectPoints}
+                  disabled={selectedCommunities.length === 0}
+                  className="w-full bg-primary text-white py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  下一步：选择点位 ({selectedCommunities.length})
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setAddStep('community');
+                      setSelectedNewPoints([]);
+                    }}
+                    className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-medium"
+                  >
+                    上一步
+                  </button>
+                  <button
+                    onClick={addSelectedPoints}
+                    disabled={selectedNewPoints.length === 0}
+                    className="flex-1 bg-primary text-white py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    添加 ({selectedNewPoints.length})
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="fixed bottom-16 left-0 right-0 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-background-dark p-4 z-50 shadow-lg">
         <div className="flex items-center gap-4 max-w-2xl mx-auto">
@@ -1038,14 +1807,40 @@ const AgentsView = ({ onNavigate }: { onNavigate: (view: ViewType) => void }) =>
           <h3 className="text-lg font-bold mb-4">永达传媒AI团队</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { name: '销售AI助理', desc: '正在分析本月南京户外广告投放趋势。', img: 'https://picsum.photos/seed/agent1/100/100', status: 'online' },
-              { name: '媒介AI助理', desc: '正在优化11月份的广告位库存分配。', img: 'https://picsum.photos/seed/agent2/100/100', status: 'online' },
-              { name: '工程AI助理', desc: '计划于凌晨 2:00 进行广告屏维护。', img: 'https://picsum.photos/seed/agent3/100/100', status: 'offline' },
-              { name: '财务AI助理', desc: '第四季度预算预测待审批。', img: 'https://picsum.photos/seed/agent4/100/100', status: 'online' },
+              { id: 'agent_sales', name: '销售AI助理', desc: '正在分析本月南京户外广告投放趋势。', img: 'https://picsum.photos/seed/agent1/100/100', status: 'online' },
+              { id: 'agent_media', name: '媒介AI助理', desc: '正在优化11月份的广告位库存分配。', img: 'https://picsum.photos/seed/agent2/100/100', status: 'online' },
+              { id: 'agent_engineering', name: '工程AI助理', desc: '计划于凌晨 2:00 进行广告屏维护。', img: 'https://picsum.photos/seed/agent3/100/100', status: 'offline' },
+              { id: 'agent_finance', name: '财务AI助理', desc: '第四季度预算预测待审批。', img: 'https://picsum.photos/seed/agent4/100/100', status: 'online' },
             ].map((agent, i) => (
               <div 
                 key={i} 
-                onClick={() => onNavigate('chat')}
+                onClick={async () => {
+                  try {
+                    // 先创建对话
+                    const response = await fetch('/api/agents/conversations/start', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ user_id: 'user_001', agent_id: agent.id })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.code === 200 && result.data) {
+                      // 存储对话ID和agent ID
+                      localStorage.setItem('currentConversationId', result.data.conversation.id);
+                      localStorage.setItem('selectedAgentId', agent.id);
+                      onNavigate('chat');
+                    } else {
+                      console.error('创建对话失败:', result.message);
+                      // 失败也跳转，让聊天界面处理
+                      localStorage.setItem('selectedAgentId', agent.id);
+                      onNavigate('chat');
+                    }
+                  } catch (error) {
+                    console.error('创建对话出错:', error);
+                    localStorage.setItem('selectedAgentId', agent.id);
+                    onNavigate('chat');
+                  }
+                }}
                 className="p-4 rounded-xl bg-slate-800 border border-white/5 shadow-sm hover:border-primary/50 transition-colors cursor-pointer"
               >
                 <div className="flex justify-between items-start mb-3">
@@ -1074,18 +1869,22 @@ const AgentsView = ({ onNavigate }: { onNavigate: (view: ViewType) => void }) =>
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('agents');
   const [history, setHistory] = useState<ViewType[]>(['agents']);
-  
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+
   // 语音输入相关状态
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [voiceInputText, setVoiceInputText] = useState('');
-  
+
   // 长按相关ref
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
 
-  const navigateTo = (view: ViewType) => {
+  const navigateTo = (view: ViewType, planId?: number) => {
     setHistory(prev => [...prev, view]);
     setCurrentView(view);
+    if (planId) {
+      setSelectedPlanId(planId);
+    }
   };
 
   const goBack = () => {
@@ -1201,9 +2000,15 @@ export default function App() {
           className="flex-1 overflow-hidden"
         >
           {currentView === 'workbench' && <WorkbenchView onNavigate={navigateTo} />}
-          {currentView === 'chat' && <AgentChatView onBack={goBack} onNavigate={navigateTo} />}
-          {currentView === 'campaign-list' && <CampaignListView onBack={goBack} onSelect={() => navigateTo('campaign-detail')} />}
-          {currentView === 'campaign-detail' && <CampaignDetailView onBack={goBack} />}
+          {currentView === 'chat' && (
+            <AgentChatView 
+              onBack={goBack} 
+              onNavigate={navigateTo} 
+              initialAgentId={localStorage.getItem('selectedAgentId') || undefined}
+            />
+          )}
+          {currentView === 'campaign-list' && <CampaignListView onBack={goBack} onSelect={(planId: number) => navigateTo('campaign-detail', planId)} />}
+          {currentView === 'campaign-detail' && selectedPlanId && <CampaignDetailView planId={selectedPlanId} onBack={goBack} />}
           {currentView === 'tasks' && <TasksView onNavigate={navigateTo} />}
           {currentView === 'task-detail' && <TaskDetailView onBack={goBack} />}
           {currentView === 'insights' && <InsightsView onNavigate={navigateTo} />}

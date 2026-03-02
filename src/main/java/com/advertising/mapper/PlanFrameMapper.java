@@ -126,4 +126,11 @@ public interface PlanFrameMapper {
      * @return 影响行数
      */
     int deleteByFrameId(Integer frameId);
+
+    /**
+     * 根据方案ID统计框架数量
+     * @param planId 方案ID
+     * @return 数量
+     */
+    int countByPlanId(Integer planId);
 }
