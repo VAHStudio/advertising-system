@@ -2,71 +2,77 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { communityService } from '../services/communityService';
+import { Icon } from '../components/Icon';
 
-interface InventoryItem {
+interface SlotItem {
   id: string;
-  name: string;
-  community: string;
-  mediaType: string;
-  status: 'available' | 'occupied' | 'maintenance';
-  price: number;
-  dateRange: string;
+  frameNo: string;
+  communityName: string;
+  building: string;
+  unit: string;
+  elevator: string;
+  currentClient: string;
+  bookingInfo: string;
+  nextAvailableDate: string;
+  status: 'in-use' | 'available' | 'booked';
+  bookings: Array<{
+    client: string;
+    startDate: number;
+    endDate: number;
+    type: 'in-use' | 'booked';
+  }>;
 }
 
 export default function Inventory() {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [mediaType, setMediaType] = useState('电梯框架');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [slots, setSlots] = useState<SlotItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
 
   useEffect(() => {
-    loadInventory();
+    loadInventoryData();
   }, []);
 
-  const loadInventory = async () => {
+  const loadInventoryData = async () => {
     try {
       setLoading(true);
-        const [communitiesData, barriersData, framesData] = await Promise.all([
-          communityService.getAllCommunities(),
-          communityService.getBarrierGates(),
-          communityService.getFrames()
-        ]);
+      const [communitiesData, framesData] = await Promise.all([
+        communityService.getAllCommunities(),
+        communityService.getFrames()
+      ]);
+
+      const communities = Array.isArray(communitiesData) ? communitiesData : communitiesData.data || [];
+      const frames = Array.isArray(framesData) ? framesData : framesData.data || [];
+
+      const items: SlotItem[] = frames.slice(0, 20).map((frame: any, idx: number) => {
+        const community = communities.find((c: any) => c.id === frame.communityId);
+        const status = frame.releaseStatus === 0 ? 'available' : frame.releaseStatus === 1 ? 'in-use' : 'booked';
         
-        const communities = Array.isArray(communitiesData) ? communitiesData : communitiesData.data || [];
-        const barriers = Array.isArray(barriersData) ? barriersData : barriersData.data || [];
-        const frames = Array.isArray(framesData) ? framesData : framesData.data || [];
+        // Mock booking data for calendar view
+        const bookings = [];
+        if (status === 'in-use') {
+          bookings.push({ client: '星空传媒', startDate: 3, endDate: 15, type: 'in-use' as const });
+        } else if (status === 'booked') {
+          bookings.push({ client: '绿生活', startDate: 16, endDate: 25, type: 'booked' as const });
+        }
+        
+        return {
+          id: frame.frameNo || `FR-${String(idx + 1).padStart(3, '0')}`,
+          frameNo: frame.frameNo || `FR-${String(idx + 1).padStart(3, '0')}`,
+          communityName: community?.buildingName || '未知社区',
+          building: frame.building || 'A栋',
+          unit: frame.unit || '1单元',
+          elevator: frame.elevator || '客梯1',
+          currentClient: status === 'in-use' ? '星空传媒' : '-',
+          bookingInfo: status === 'booked' ? '绿生活 (08.15起)' : status === 'in-use' ? '无' : '-',
+          nextAvailableDate: status === 'available' ? '现在' : '2024-09-01',
+          status,
+          bookings
+        };
+      });
 
-      const items: InventoryItem[] = [
-        ...barriers.map((barrier, idx) => {
-          const community = communities.find(c => c.id === barrier.communityId);
-          return {
-            id: barrier.gateNo,
-            name: barrier.doorLocation,
-            community: community?.buildingName || '未知社区',
-            mediaType: '道闸',
-            status: barrier.releaseStatus === 0 ? 'available' : barrier.releaseStatus === 1 ? 'occupied' : 'maintenance',
-            price: 1200,
-            dateRange: barrier.releaseDateBegin && barrier.releaseDateEnd 
-              ? `${barrier.releaseDateBegin} ~ ${barrier.releaseDateEnd}`
-              : '全年可投'
-          };
-        }),
-        ...frames.map((frame, idx) => {
-          const community = communities.find(c => c.id === frame.communityId);
-          return {
-            id: frame.frameNo,
-            name: `${frame.building} ${frame.unit}`,
-            community: community?.buildingName || '未知社区',
-            mediaType: '电梯框架',
-            status: frame.releaseStatus === 0 ? 'available' : frame.releaseStatus === 1 ? 'occupied' : 'maintenance',
-            price: 300,
-            dateRange: frame.releaseDateBegin && frame.releaseDateEnd
-              ? `${frame.releaseDateBegin} ~ ${frame.releaseDateEnd}`
-              : '全年可投'
-          };
-        })
-      ];
-
-      setInventory(items);
+      setSlots(items);
     } catch (err) {
       console.error('加载库存数据失败:', err);
     } finally {
@@ -74,99 +80,228 @@ export default function Inventory() {
     }
   };
 
-  const filteredInventory = filterStatus === 'all' 
-    ? inventory 
-    : inventory.filter(item => item.status === filterStatus);
+  const filteredSlots = slots.filter(slot => 
+    slot.communityName.includes(searchTerm) || 
+    slot.frameNo.includes(searchTerm)
+  );
 
-  if (loading) {
-    return (
-      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-slate-500 dark:text-slate-400">加载库存数据中...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'in-use':
+        return <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">在刊</span>;
+      case 'available':
+        return <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">空闲</span>;
+      case 'booked':
+        return <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">预定</span>;
+      default:
+        return null;
+    }
+  };
+
+  // Generate 30 days for calendar
+  const days = Array.from({ length: 30 }, (_, i) => i + 1);
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
       <Sidebar />
+      
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
-        <Header title="库存查询">
-          <div className="flex items-center gap-2 bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-1.5 shadow-sm mr-4">
+        <Header 
+          title="销控查询" 
+          subtitle="实时查询媒体资源的销售状态与档期。"
+        >
+          {/* Media Type Dropdown */}
+          <div className="flex items-center gap-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2 mr-4">
+            <Icon name="layers" className="text-slate-400" size={20} />
             <select 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              value={mediaType}
+              onChange={(e) => setMediaType(e.target.value)}
               className="bg-transparent border-none text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-0 p-0 pr-6 cursor-pointer"
             >
-              <option value="all">全部状态</option>
-              <option value="available">可售</option>
-              <option value="occupied">已售</option>
-              <option value="maintenance">维护中</option>
+              <option value="电梯框架">电梯框架</option>
+              <option value="道闸">道闸</option>
+              <option value="户外大牌">户外大牌</option>
             </select>
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-primary text-white' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <Icon name="list" size={16} />
+              列表视图
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'calendar' 
+                  ? 'bg-primary text-white' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <Icon name="calendar_view_month" size={16} />
+              档期图
+            </button>
           </div>
         </Header>
 
         <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-            <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
-              <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
-                <h3 className="font-bold text-slate-900 dark:text-white">
-                  资源库存 ({filteredInventory.length} / {inventory.length})
-                </h3>
+          {/* Search Bar */}
+          <div className="p-6 pb-0">
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Icon name="search" className="absolute left-3 top-2.5 text-slate-400" size={20} />
+                <input 
+                  type="text" 
+                  placeholder="搜索点位名称或编号..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary text-slate-900 dark:text-white placeholder-slate-400"
+                />
               </div>
-              
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border-light dark:border-border-dark text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    <th className="p-4 font-medium">资源编号</th>
-                    <th className="p-4 font-medium">名称</th>
-                    <th className="p-4 font-medium">所属社区</th>
-                    <th className="p-4 font-medium">媒体类型</th>
-                    <th className="p-4 font-medium">价格</th>
-                    <th className="p-4 font-medium">档期</th>
-                    <th className="p-4 font-medium">状态</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-light dark:divide-border-dark text-sm">
-                  {filteredInventory.map(item => (
-                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="p-4 font-mono text-xs text-slate-900 dark:text-white">{item.id}</td>
-                      <td className="p-4 font-medium text-slate-900 dark:text-white">{item.name}</td>
-                      <td className="p-4 text-slate-600 dark:text-slate-300">{item.community}</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                          {item.mediaType}
-                        </span>
-                      </td>
-                      <td className="p-4 font-medium text-slate-900 dark:text-white">¥{item.price}/月</td>
-                      <td className="p-4 text-xs text-slate-500 dark:text-slate-400">{item.dateRange}</td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                          item.status === 'available' 
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                            : item.status === 'occupied'
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                        }`}>
-                          {item.status === 'available' ? '可售' : item.status === 'occupied' ? '已售' : '维护中'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              
-              {filteredInventory.length === 0 && (
-                <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                  暂无库存数据
-                </div>
-              )}
+              <button className="flex items-center gap-2 px-4 py-2.5 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <Icon name="filter_list" size={20} />
+                高级筛选
+              </button>
             </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+            {viewMode === 'list' ? (
+              /* List View */
+              <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-border-light dark:border-border-dark overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border-light dark:border-border-dark text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <th className="p-4 font-medium">广告位编号</th>
+                      <th className="p-4 font-medium">点位名称</th>
+                      <th className="p-4 font-medium">楼栋</th>
+                      <th className="p-4 font-medium">单元</th>
+                      <th className="p-4 font-medium">电梯</th>
+                      <th className="p-4 font-medium">当前在刊客户</th>
+                      <th className="p-4 font-medium">方案预定信息</th>
+                      <th className="p-4 font-medium">最近可订时间</th>
+                      <th className="p-4 font-medium">状态</th>
+                      <th className="p-4 font-medium">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-light dark:divide-border-dark text-sm">
+                    {filteredSlots.map((slot) => (
+                      <tr key={slot.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="p-4 font-mono text-xs text-slate-900 dark:text-white">{slot.frameNo}</td>
+                        <td className="p-4 font-bold text-slate-900 dark:text-white">{slot.communityName}</td>
+                        <td className="p-4 text-slate-600 dark:text-slate-300">{slot.building}</td>
+                        <td className="p-4 text-slate-600 dark:text-slate-300">{slot.unit}</td>
+                        <td className="p-4 text-slate-600 dark:text-slate-300">{slot.elevator}</td>
+                        <td className="p-4">
+                          {slot.currentClient !== '-' ? (
+                            <span className="text-blue-400">{slot.currentClient}</span>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-slate-600 dark:text-slate-300">{slot.bookingInfo}</td>
+                        <td className="p-4">
+                          {slot.nextAvailableDate === '现在' ? (
+                            <span className="text-emerald-400">现在</span>
+                          ) : (
+                            <span className="text-slate-600 dark:text-slate-300">{slot.nextAvailableDate}</span>
+                          )}
+                        </td>
+                        <td className="p-4">{getStatusBadge(slot.status)}</td>
+                        <td className="p-4">
+                          <button className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">
+                            加入预定
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredSlots.length === 0 && (
+                  <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                    暂无数据
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Calendar View (Gantt) */
+              <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-border-light dark:border-border-dark overflow-hidden">
+                {/* Legend */}
+                <div className="p-4 border-b border-border-light dark:border-border-dark flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">在刊档期</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">预定档期</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full border-2 border-slate-400"></span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">空闲档期</span>
+                  </div>
+                </div>
+
+                {/* Gantt Chart */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse" style={{ minWidth: '1000px' }}>
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border-light dark:border-border-dark">
+                        <th className="p-4 font-medium text-slate-500 dark:text-slate-400 text-sm w-48">广告位</th>
+                        {days.map(day => (
+                          <th key={day} className="p-2 text-center text-xs text-slate-500 dark:text-slate-400 w-8">
+                            {day}日
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-light dark:divide-border-dark">
+                      {filteredSlots.map((slot) => (
+                        <tr key={slot.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="p-4 border-r border-border-light dark:border-border-dark">
+                            <div className="font-bold text-slate-900 dark:text-white text-sm">{slot.communityName}</div>
+                            <div className="text-xs text-slate-500 font-mono mt-0.5">{slot.frameNo}</div>
+                          </td>
+                          {days.map(day => {
+                            const booking = slot.bookings.find(b => day >= b.startDate && day <= b.endDate);
+                            return (
+                              <td key={day} className="p-0 relative h-12">
+                                {booking && (
+                                  <div 
+                                    className={`absolute inset-0.5 rounded flex items-center justify-center text-xs font-medium text-white overflow-hidden ${
+                                      booking.type === 'in-use' ? 'bg-blue-500' : 'bg-amber-500'
+                                    }`}
+                                    style={{
+                                      left: day === booking.startDate ? '4px' : '0',
+                                      right: day === booking.endDate ? '4px' : '0'
+                                    }}
+                                  >
+                                    {day === Math.floor((booking.startDate + booking.endDate) / 2) && booking.client}
+                                  </div>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {filteredSlots.length === 0 && (
+                  <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                    暂无数据
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>

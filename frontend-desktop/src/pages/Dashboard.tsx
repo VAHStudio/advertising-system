@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { dashboardService, DashboardStats } from '../services/dashboardService';
+import { Icon } from '../components/Icon';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function Dashboard() {
           <Header title="智能工作台" subtitle="加载中...">
             <div className="relative hidden md:block">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="material-icons-round text-subtext-light dark:text-subtext-dark text-lg">search</span>
+                <Icon name="search" className="text-subtext-light dark:text-subtext-dark" size={20} />
               </span>
               <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
             </div>
@@ -59,7 +60,7 @@ export default function Dashboard() {
           <Header title="智能工作台" subtitle="加载失败">
             <div className="relative hidden md:block">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="material-icons-round text-subtext-light dark:text-subtext-dark text-lg">search</span>
+                <Icon name="search" className="text-subtext-light dark:text-subtext-dark" size={20} />
               </span>
               <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
             </div>
@@ -87,7 +88,7 @@ export default function Dashboard() {
         <Header title="智能工作台" subtitle="早上好，Alex。这是您的每日概览。">
           <div className="relative hidden md:block">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="material-icons-round text-subtext-light dark:text-subtext-dark text-lg">search</span>
+              <Icon name="search" className="text-subtext-light dark:text-subtext-dark" size={20} />
             </span>
             <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
           </div>
@@ -98,38 +99,38 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-text-light dark:text-text-dark flex items-center gap-2">
-                <span className="material-icons-round text-accent">bolt</span> 快捷操作
+                <Icon name="bolt" className="text-accent" size={20} /> 快捷操作
               </h3>
               <button className="text-sm text-primary hover:text-primary-dark font-medium">编辑快捷方式</button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               <button onClick={() => navigate('/customers')} className="flex flex-col items-center justify-center p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-primary/50 dark:hover:border-primary/50 transition-all group">
                 <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-primary text-xl">add_box</span>
+                  <Icon name="add_box" className="text-primary" size={20} />
                 </div>
                 <span className="text-sm font-medium text-text-light dark:text-text-dark">新建客户</span>
               </button>
               <button onClick={() => navigate('/plans')} className="flex flex-col items-center justify-center p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-primary/50 dark:hover:border-primary/50 transition-all group">
                 <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-accent text-xl">auto_fix_high</span>
+                  <Icon name="auto_fix_high" className="text-accent" size={20} />
                 </div>
                 <span className="text-sm font-medium text-text-light dark:text-text-dark">生成方案</span>
               </button>
               <button onClick={() => navigate('/inventory')} className="flex flex-col items-center justify-center p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-primary/50 dark:hover:border-primary/50 transition-all group">
                 <div className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-green-500 text-xl">map</span>
+                  <Icon name="map" className="text-green-500" size={20} />
                 </div>
                 <span className="text-sm font-medium text-text-light dark:text-text-dark">查看档期</span>
               </button>
               <button onClick={() => navigate('/sales-contracts')} className="flex flex-col items-center justify-center p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-primary/50 dark:hover:border-primary/50 transition-all group">
                 <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-orange-500 text-xl">assignment_turned_in</span>
+                  <Icon name="assignment_turned_in" className="text-orange-500" size={20} />
                 </div>
                 <span className="text-sm font-medium text-text-light dark:text-text-dark">起草合同</span>
               </button>
               <button onClick={() => navigate('/execution')} className="flex flex-col items-center justify-center p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-primary/50 dark:hover:border-primary/50 transition-all group">
                 <div className="w-10 h-10 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-pink-500 text-xl">camera_alt</span>
+                  <Icon name="camera_alt" className="text-pink-500" size={20} />
                 </div>
                 <span className="text-sm font-medium text-text-light dark:text-text-dark">申请上刊</span>
               </button>
@@ -139,7 +140,7 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-text-light dark:text-text-dark flex items-center gap-2">
-                <span className="material-icons-round text-primary">analytics</span> 数据概览
+                <Icon name="analytics" className="text-primary" size={20} /> 数据概览
               </h3>
               <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
                 <button className="px-3 py-1 text-xs font-medium rounded bg-gray-100 dark:bg-gray-700 text-text-light dark:text-text-dark">本周</button>
@@ -154,7 +155,7 @@ export default function Dashboard() {
                     <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">{stats?.availableResources?.toLocaleString() || 0}</h4>
                   </div>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                    <span className="material-icons-round text-[14px] mr-1">trending_up</span> +4.5%
+                    <Icon name="trending_up" size={14} className="mr-1" /> +4.5%
                   </span>
                 </div>
                 <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -170,7 +171,7 @@ export default function Dashboard() {
                     <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">¥{(stats?.monthlyRevenue || 0).toLocaleString()}</h4>
                   </div>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(stats?.revenueChange || 0) >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
-                    <span className="material-icons-round text-[14px] mr-1">{(stats?.revenueChange || 0) >= 0 ? 'trending_up' : 'trending_down'}</span> {(stats?.revenueChange || 0) >= 0 ? '+' : ''}{stats?.revenueChange || -2.1}%
+                    <Icon name={(stats?.revenueChange || 0) >= 0 ? 'trending_up' : 'trending_down'} size={14} className="mr-1" /> {(stats?.revenueChange || 0) >= 0 ? '+' : ''}{stats?.revenueChange || -2.1}%
                   </span>
                 </div>
                 <div className="flex items-end space-x-2 h-10 mt-2">
@@ -190,7 +191,7 @@ export default function Dashboard() {
                     <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">{stats?.pendingTasks || 0}</h4>
                   </div>
                   <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
-                    <span className="material-icons-round text-lg">priority_high</span>
+                    <Icon name="priority_high" size={20} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2">
@@ -218,7 +219,7 @@ export default function Dashboard() {
                   stats.recentPlans.map((plan, index) => (
                     <div key={plan.id || index} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-4">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                        <span className="material-icons-round">description</span>
+                        <Icon name="description" size={20} />
                       </div>
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold text-text-light dark:text-text-dark">{plan.planName}</h4>
@@ -227,7 +228,7 @@ export default function Dashboard() {
                       <div className="flex items-center gap-3">
                         <span className={`text-xs font-medium px-2 py-1 rounded ${plan.status === '进行中' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' : plan.status === '已完成' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>{plan.status}</span>
                         <button className="text-subtext-light hover:text-primary dark:text-subtext-dark">
-                          <span className="material-icons-round">chevron_right</span>
+                          <Icon name="chevron_right" size={20} />
                         </button>
                       </div>
                     </div>
@@ -244,7 +245,7 @@ export default function Dashboard() {
               <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10"></div>
               <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white opacity-10"></div>
               <div className="flex items-center gap-2 mb-4">
-                <span className="material-icons-round">auto_awesome</span>
+                <Icon name="auto_awesome" size={20} />
                 <h3 className="font-bold text-lg">资源统计</h3>
               </div>
               <div className="space-y-3 text-sm text-blue-50">
@@ -270,7 +271,7 @@ export default function Dashboard() {
                 className="w-full mt-6 py-2.5 bg-white text-primary font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-sm flex items-center justify-center gap-2"
               >
                 <span>查看资源详情</span>
-                <span className="material-icons-round text-sm">arrow_forward</span>
+                <Icon name="arrow_forward" size={16} />
               </button>
             </div>
           </section>
@@ -284,7 +285,7 @@ export default function Dashboard() {
           <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-white dark:bg-surface-dark border-b border-r border-gray-100 dark:border-gray-600 transform rotate-45"></div>
         </div>
         <button className="ai-pulse flex items-center justify-center w-14 h-14 bg-gradient-to-r from-primary to-accent rounded-full shadow-lg text-white hover:scale-105 transition-transform duration-200">
-          <span className="material-icons-round text-2xl">smart_toy</span>
+          <Icon name="smart_toy" size={24} />
         </button>
       </div>
     </div>

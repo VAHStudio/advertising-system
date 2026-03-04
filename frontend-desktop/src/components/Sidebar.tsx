@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
+import { Icon } from './Icon';
 
 export default function Sidebar() {
   const location = useLocation();
@@ -53,7 +54,9 @@ export default function Sidebar() {
                   : "text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
               )}
             >
-              <span className={clsx("material-icons-round mr-3 text-xl transition-colors", isActive ? "text-primary" : "group-hover:text-primary")}>{item.icon}</span>
+              <span className={clsx("mr-3 transition-colors", isActive ? "text-primary" : "group-hover:text-primary")}>
+                <Icon name={item.icon!} size={20} />
+              </span>
               <span className="font-medium text-sm">{item.name}</span>
             </Link>
           );
@@ -61,13 +64,15 @@ export default function Sidebar() {
       </nav>
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <img alt="User Avatar" className="w-9 h-9 rounded-full border-2 border-surface-light dark:border-gray-600" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIAptrmCdQJvQfbsbILCWBU6EDZsSfsk6x_4lw2ObBaxomsNI6al01zLWKDVbGCdUmbPan-fCXT7H5GG49ZMQPS6XrkS25NQIxeBGVgQ_-H5y_TXzKYCoglFMyl_9pYHHvdpxZaSFg16hnrR3w1I8_FLVPsBUQAupGJkBBjmW9bPsDJPWjx0dBgj39t0vmtUhRCuA3m_DdP6PKtfH6WGE0kWiNmKD5ud5UouOaXkvkkGdZB893VT4uINLfljVC1AuYcdAM2k-PSXY"/>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm border-2 border-surface-light dark:border-gray-600">
+            AC
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-text-light dark:text-text-dark truncate">Alex Chen</p>
             <p className="text-xs text-subtext-light dark:text-subtext-dark truncate">销售经理</p>
           </div>
           <button className="text-subtext-light hover:text-primary dark:text-subtext-dark dark:hover:text-white">
-            <span className="material-icons-round text-lg">logout</span>
+            <Icon name="logout" size={20} />
           </button>
         </div>
       </div>

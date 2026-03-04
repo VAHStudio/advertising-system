@@ -1,3 +1,4 @@
+import { Icon } from '../../components/Icon'
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -176,7 +177,7 @@ export default function Plans() {
               <p className="text-sm text-slate-500 dark:text-slate-400 font-mono">{selectedPlan.id} · 更新于 {selectedPlan.updatedAt}</p>
             </div>
             <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-              <span className="material-icons-outlined text-[18px]">edit</span>
+              <Icon name="edit" size={18} />
               编辑方案
             </button>
           </div>
@@ -185,14 +186,14 @@ export default function Plans() {
             <div className="space-y-1">
               <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">客户</span>
               <p className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="material-icons-outlined text-slate-400 text-[18px]">business</span>
+                <Icon name="business" className="text-slate-400" size={18} />
                 {selectedPlan.customer}
               </p>
             </div>
             <div className="space-y-1">
               <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">预算</span>
               <p className="font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                <span className="material-icons-outlined text-emerald-500 text-[18px]">payments</span>
+                <Icon name="payments" className="text-emerald-500" size={18} />
                 ¥ {selectedPlan.budget.toLocaleString()}
               </p>
             </div>
@@ -219,7 +220,7 @@ export default function Plans() {
         <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden flex flex-col">
           <div className="p-4 border-b border-border-light dark:border-border-dark flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
             <h2 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="material-icons-outlined text-primary">place</span>
+              <Icon name="place" className="text-primary" size={20} />
               选点列表 ({selectedPlan.points.length} 个点位)
             </h2>
             <div className="flex items-center gap-3">
@@ -236,14 +237,14 @@ export default function Plans() {
                   onClick={() => setIsMapMode(false)}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors ${!isMapMode ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                 >
-                  <span className="material-icons-outlined text-[16px]">list</span>
+                  <Icon name="list" size={16} />
                   列表
                 </button>
                 <button 
                   onClick={() => setIsMapMode(true)}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors ${isMapMode ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                 >
-                  <span className="material-icons-outlined text-[16px]">map</span>
+                  <Icon name="map" size={16} />
                   地图
                 </button>
               </div>
@@ -254,7 +255,7 @@ export default function Plans() {
             <div className="h-[500px] relative bg-[#e5e7eb] dark:bg-[#1e293b]">
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center text-slate-400">
-                  <span className="material-icons-outlined text-6xl mb-4">map</span>
+                  <Icon name="map" size={48} className="mb-4" />
                   <p>地图模式预览 (共 {selectedPlan.points.length} 个标记点)</p>
                 </div>
               </div>
@@ -325,7 +326,7 @@ export default function Plans() {
         {/* Mockups */}
         <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark p-6">
           <h2 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-            <span className="material-icons-outlined text-primary">image</span>
+            <Icon name="image" className="text-primary" size={20} />
             设计小样图
           </h2>
           {selectedPlan.mockups.length === 0 ? (
@@ -338,7 +339,7 @@ export default function Plans() {
                 <div key={idx} className="aspect-video rounded-lg overflow-hidden border border-border-light dark:border-border-dark group relative cursor-pointer">
                   <img src={url} alt={`Mockup ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="material-icons-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">zoom_in</span>
+                    <Icon name="zoom_in" className="text-white" size={20} />
                   </div>
                 </div>
               ))}
@@ -393,12 +394,12 @@ export default function Plans() {
               onClick={() => setSelectedPlan(null)}
               className="px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
             >
-              <span className="material-icons-outlined text-[18px]">arrow_back</span>
+              <Icon name="arrow_back" size={18} />
               返回看板
             </button>
           ) : (
             <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-              <span className="material-icons-outlined text-[18px]">add</span>
+              <Icon name="add" size={18} />
               创建方案
             </button>
           )}

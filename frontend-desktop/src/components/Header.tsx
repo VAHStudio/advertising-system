@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icon } from './Icon';
 
 interface HeaderProps {
   title: string;
@@ -30,13 +31,11 @@ export default function Header({ title, subtitle, children }: HeaderProps) {
         {children}
         <div className="hidden md:flex items-center gap-2 border-l border-gray-200 dark:border-gray-700 pl-4 ml-2">
           <button className="relative p-2 text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-            <span className="material-icons-round">notifications</span>
+            <Icon name="notifications" size={20} />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-surface-dark"></span>
           </button>
           <button className="p-2 text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex items-center justify-center w-10 h-10" onClick={toggleDarkMode}>
-            <span className="material-icons-round">
-              {isDarkMode ? 'light_mode' : 'dark_mode'}
-            </span>
+            <Icon name={isDarkMode ? 'light_mode' : 'dark_mode'} size={20} />
           </button>
         </div>
       </div>

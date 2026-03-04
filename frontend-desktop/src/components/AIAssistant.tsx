@@ -1,3 +1,4 @@
+import { Icon } from '../../components/Icon'
 import React, { useState, useRef, useEffect } from 'react';
 
 type AssistantType = 'sales' | 'media' | 'engineering' | 'finance' | null;

@@ -1,3 +1,4 @@
+import { Icon } from '../../components/Icon'
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
