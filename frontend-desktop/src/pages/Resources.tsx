@@ -1,5 +1,5 @@
-import { Icon } from '../../components/Icon'
 import React, { useState, useEffect } from 'react';
+import { Icon } from '../components/Icon';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { communityService, Community, BarrierGate, Frame } from '../services/communityService';
@@ -235,7 +235,7 @@ export default function Resources() {
             </div>
             {activeTab === 'slots' && (
               <div className="flex items-center gap-2 bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-1.5 shadow-sm mr-4">
-                <span className="material-icons-outlined text-slate-400 text-[18px]">category</span>
+                <Icon name="category" className="text-slate-400" size={18} />
                 <select 
                   value={selectedMediaType}
                   onChange={(e) => setSelectedMediaType(e.target.value)}
@@ -248,7 +248,7 @@ export default function Resources() {
               </div>
             )}
             <button className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-              <span className="material-icons-outlined text-[18px]">add</span>
+              <Icon name="add" size={18} />
               新增{activeTab === 'points' ? '点位' : '广告位'}
             </button>
           </Header>
@@ -260,7 +260,7 @@ export default function Resources() {
                <div className="w-80 bg-white dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col z-10">
                  <div className="p-4 border-b border-border-light dark:border-border-dark flex items-center gap-3">
                    <button onClick={() => setIsMapMode(false)} className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                     <span className="material-icons-outlined">arrow_back</span>
+                     <Icon name="arrow_back" size={20} />
                    </button>
                    <h2 className="font-bold text-lg text-slate-900 dark:text-white">点位分布地图</h2>
                  </div>
@@ -276,7 +276,7 @@ export default function Resources() {
                <div className="flex-1 relative bg-[#e5e7eb] dark:bg-[#1e293b]">
                  <div className="w-full h-full flex items-center justify-center text-slate-400">
                    <div className="text-center">
-                     <span className="material-icons-outlined text-6xl mb-4">map</span>
+                     <Icon name="map" size={48} className="mb-4" />
                      <p>地图模式 - {points.length} 个点位</p>
                    </div>
                  </div>
@@ -287,12 +287,12 @@ export default function Resources() {
               <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden flex flex-col">
                 <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
                   <div className="relative w-64">
-                    <span className="material-icons-outlined absolute left-3 top-2 text-slate-400 text-[18px]">search</span>
+                    <Icon name="search" className="absolute left-3 top-2 text-slate-400" size={18} />
                     <input type="text" placeholder={`搜索${activeTab === 'points' ? '点位名称...' : '广告位或点位...'}`} className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg text-sm focus:ring-2 focus:ring-primary text-slate-900 dark:text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   </div>
                   {activeTab === 'points' && (
                     <button onClick={() => setIsMapMode(true)} className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5">
-                      <span className="material-icons-outlined text-[16px]">map</span>地图模式
+                      <Icon name="map" size={16} />地图模式
                     </button>
                   )}
                 </div>
@@ -358,11 +358,11 @@ export default function Resources() {
           <div className={`absolute inset-y-0 right-0 w-[400px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedPoint || selectedSlot ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="material-icons-outlined text-primary">{selectedPoint ? 'place' : 'ad_units'}</span>
+                <Icon name={selectedPoint ? "place" : "ad_units"} className="text-primary" size={20} />
                 {selectedPoint ? '点位详情' : '广告位详情'}
               </h2>
               <button onClick={closeDrawer} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <span className="material-icons-outlined text-[20px]">close</span>
+                <Icon name="close" size={20} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">

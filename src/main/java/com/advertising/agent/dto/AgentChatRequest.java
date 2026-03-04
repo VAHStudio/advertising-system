@@ -1,5 +1,6 @@
 package com.advertising.agent.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,11 +25,19 @@ public class AgentChatRequest {
     /**
      * 会话ID（首次为空，后续携带）
      */
+    @JsonProperty("conversation_id")
     private String sessionId;
+    
+    /**
+     * 智能体ID
+     */
+    @JsonProperty("agent_id")
+    private String agentId;
     
     /**
      * 用户选择的选项值
      */
+    @JsonProperty("selected_value")
     private String selectedValue;
     
     /**

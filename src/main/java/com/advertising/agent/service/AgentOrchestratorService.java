@@ -1,6 +1,7 @@
 package com.advertising.agent.service;
 
 import com.advertising.agent.dto.*;
+import com.advertising.agent.util.ExcelExportUtil;
 import com.advertising.common.Result;
 import com.advertising.entity.*;
 import com.advertising.entity.agent.AgentSession;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +41,7 @@ public class AgentOrchestratorService {
     private final PlanCommunityService planCommunityService;
     private final PlanBarrierService planBarrierService;
     private final ObjectMapper objectMapper;
+    private final ExcelExportUtil excelExportUtil;
     
     private static final long SESSION_EXPIRE_MINUTES = 30;
     
@@ -46,6 +49,11 @@ public class AgentOrchestratorService {
     public Result<AgentChatResponse> processChat(AgentChatRequest request) {
         try {
             AgentSession session = getOrCreateSession(request.getSessionId());
+            
+            // 处理导出Excel请求
+            if ("export_excel".equals(request.getSelectedValue()) && "query_inventory".equals(session.getCurrentStep())) {
+                return exportInventoryToExcel(session, request);
+            }
             
             switch (session.getCurrentStep()) {
                 case "intent":
@@ -56,6 +64,8 @@ public class AgentOrchestratorService {
                     return processDateStep(session, request);
                 case "confirmation":
                     return processConfirmationStep(session, request);
+                case "query_inventory":
+                    return processInventoryQuery(session, request);
                 default:
                     resetSession(session);
                     return processIntentStep(session, request);
@@ -69,10 +79,15 @@ public class AgentOrchestratorService {
     private Result<AgentChatResponse> processIntentStep(AgentSession session, AgentChatRequest request) throws Exception {
         AgentIntent intent = kimiAgentService.parseIntent(request.getMessage());
         
+        // 处理销控/库存查询请求
+        if ("QUERY_INVENTORY".equals(intent.getAction())) {
+            return processInventoryQueryIntent(session, intent);
+        }
+        
         if (!"CREATE_PLAN".equals(intent.getAction())) {
             return Result.success(AgentChatResponse.builder()
                     .type(AgentChatResponse.TYPE_TEXT)
-                    .message("我还不太理解您的需求。请尝试说：\n• 帮我建个可口可乐的广告方案\n• 创建10个道闸点位的投放方案")
+                    .message("我还不太理解您的需求。请尝试说：\n• 帮我建个可口可乐的广告方案\n• 创建10个道闸点位的投放方案\n• 查看4月的销控表，找出100个空闲道闸点位")
                     .sessionId(session.getId())
                     .step(AgentChatResponse.STEP_INTENT)
                     .build());
@@ -123,6 +138,301 @@ public class AgentOrchestratorService {
                     .data(mapOf("cities", cities))
                     .actions(cityActions)
                     .build());
+        }
+    }
+    
+    /**
+     * 处理销控查询意图 - 选择城市步骤
+     */
+    private Result<AgentChatResponse> processInventoryQueryIntent(AgentSession session, AgentIntent intent) throws Exception {
+        session.setIntentJson(toJson(intent));
+        session.setCurrentStep("query_inventory");
+        updateSession(session);
+        
+        List<String> cities = getAvailableCities();
+        
+        StringBuilder message = new StringBuilder();
+        message.append("📊 **销控查询**\n\n");
+        message.append("查询条件：\n");
+        if (intent.getTimeDescription() != null) {
+            message.append("• 时间：").append(intent.getTimeDescription()).append("\n");
+        }
+        if (intent.getQuantity() != null) {
+            message.append("• 数量：").append(intent.getQuantity()).append("个道闸\n");
+        } else {
+            message.append("• 数量：全部空闲点位\n");
+        }
+        message.append("\n请选择要查询的城市：");
+        
+        List<AgentChatResponse.Action> cityActions = cities.stream()
+                .map(city -> AgentChatResponse.Action.builder()
+                        .label(city)
+                        .value(city)
+                        .type("primary")
+                        .build())
+                .collect(Collectors.toList());
+        
+        return Result.success(AgentChatResponse.builder()
+                .type(AgentChatResponse.TYPE_CITY_SELECTION)
+                .message(message.toString())
+                .sessionId(session.getId())
+                .step("query_inventory")
+                .intent(intent)
+                .data(mapOf("cities", cities, "queryType", "inventory"))
+                .actions(cityActions)
+                .build());
+    }
+    
+    /**
+     * 处理销控查询 - 查询空闲点位并返回结果
+     */
+    private Result<AgentChatResponse> processInventoryQuery(AgentSession session, AgentChatRequest request) throws Exception {
+        AgentIntent intent = fromJson(session.getIntentJson(), AgentIntent.class);
+        
+        // 获取城市选择
+        String city = request.getSelectedValue();
+        if (city == null || city.isEmpty()) {
+            return Result.success(AgentChatResponse.builder()
+                    .type(AgentChatResponse.TYPE_CITY_SELECTION)
+                    .message("请选择要查询的城市：")
+                    .sessionId(session.getId())
+                    .step("query_inventory")
+                    .intent(intent)
+                    .actions(getAvailableCities().stream()
+                            .map(c -> AgentChatResponse.Action.builder()
+                                    .label(c)
+                                    .value(c)
+                                    .type("primary")
+                                    .build())
+                            .collect(Collectors.toList()))
+                    .build());
+        }
+        
+        // 解析日期范围
+        LocalDate beginDate;
+        LocalDate endDate;
+        String timeDesc = intent.getTimeDescription();
+        
+        if (timeDesc != null && timeDesc.contains("4")) {
+            // 4月份
+            beginDate = LocalDate.of(2025, 4, 1);
+            endDate = LocalDate.of(2025, 4, 30);
+        } else if (timeDesc != null && timeDesc.contains("3")) {
+            // 3月份
+            beginDate = LocalDate.of(2025, 3, 1);
+            endDate = LocalDate.of(2025, 3, 31);
+        } else {
+            // 默认查询当前月份
+            beginDate = LocalDate.now().withDayOfMonth(1);
+            endDate = beginDate.plusMonths(1).minusDays(1);
+        }
+        
+        // 获取查询数量限制
+        Integer limit = intent.getQuantity();
+        if (limit == null || limit <= 0) {
+            limit = 100; // 默认查询100个
+        }
+        
+        // 查询空闲道闸点位
+        List<BarrierGate> availableBarriers = barrierGateMapper.selectAvailableBarriers(
+                city, null, beginDate, endDate, limit);
+        
+        // 构建返回结果
+        StringBuilder message = new StringBuilder();
+        message.append("📊 **").append(city).append(" ").append(timeDesc != null ? timeDesc : "当前月份").append(" 销控表**\n\n");
+        message.append("找到 ").append(availableBarriers.size()).append(" 个空闲道闸点位\n\n");
+        
+        if (availableBarriers.isEmpty()) {
+            message.append("⚠️ 该时间段内没有空闲道闸点位。\n");
+        } else {
+            message.append("**空闲点位列表：**\n");
+            int count = 0;
+            for (BarrierGate barrier : availableBarriers) {
+                count++;
+                String communityName = barrier.getCommunity() != null 
+                        ? barrier.getCommunity().getBuildingName() 
+                        : "未知社区";
+                message.append(String.format("%d. %s - %s (%s)\n", 
+                        count,
+                        communityName,
+                        barrier.getGateNo(),
+                        barrier.getDoorLocation() != null ? barrier.getDoorLocation() : "未知位置"));
+                
+                if (count >= 20) {
+                    message.append("... 还有 ").append(availableBarriers.size() - 20).append(" 个点位\n");
+                    break;
+                }
+            }
+        }
+        
+        // 准备导出数据
+        List<Map<String, Object>> exportData = availableBarriers.stream()
+                .map(b -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("序号", availableBarriers.indexOf(b) + 1);
+                    map.put("社区名称", b.getCommunity() != null ? b.getCommunity().getBuildingName() : "未知");
+                    map.put("道闸编号", b.getGateNo());
+                    map.put("设备编号", b.getDeviceNo());
+                    map.put("门岗位置", b.getDoorLocation());
+                    map.put("城市", b.getCommunity() != null ? b.getCommunity().getCity() : city);
+                    map.put("开始日期", beginDate.toString());
+                    map.put("结束日期", endDate.toString());
+                    return map;
+                })
+                .collect(Collectors.toList());
+        
+        // 存储查询结果到session context，供导出使用
+        Map<String, Object> queryContext = new HashMap<>();
+        queryContext.put("availableBarriers", availableBarriers);
+        queryContext.put("city", city);
+        queryContext.put("beginDate", beginDate.toString());
+        queryContext.put("endDate", endDate.toString());
+        queryContext.put("timeDescription", timeDesc);
+        session.setContextJson(toJson(queryContext));
+        updateSession(session);
+        
+        List<AgentChatResponse.Action> actions = new ArrayList<>();
+        if (!availableBarriers.isEmpty()) {
+            actions.add(AgentChatResponse.Action.builder()
+                    .label("导出Excel")
+                    .value("export_excel")
+                    .type("primary")
+                    .build());
+        }
+        actions.add(AgentChatResponse.Action.builder()
+                .label("继续查询")
+                .value("continue")
+                .type("secondary")
+                .build());
+        
+        return Result.success(AgentChatResponse.builder()
+                .type(AgentChatResponse.TYPE_TEXT)
+                .message(message.toString())
+                .sessionId(session.getId())
+                .step(AgentChatResponse.STEP_COMPLETED)
+                .intent(intent)
+                .data(mapOf(
+                        "queryType", "inventory",
+                        "city", city,
+                        "beginDate", beginDate.toString(),
+                        "endDate", endDate.toString(),
+                        "totalCount", availableBarriers.size(),
+                        "exportData", exportData,
+                        "barriers", availableBarriers
+                ))
+                .actions(actions)
+                .build());
+    }
+    
+    /**
+     * 导出销控查询结果为Excel文件
+     */
+    private Result<AgentChatResponse> exportInventoryToExcel(AgentSession session, AgentChatRequest request) throws Exception {
+        // 从session context中获取查询结果
+        String contextJson = session.getContextJson();
+        if (contextJson == null || contextJson.isEmpty()) {
+            return Result.error("导出失败：找不到查询数据");
+        }
+        
+        Map<String, Object> context = fromJson(contextJson, HashMap.class);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> barrierMaps = (List<Map<String, Object>>) context.get("availableBarriers");
+        String city = (String) context.get("city");
+        String beginDateStr = (String) context.get("beginDate");
+        String endDateStr = (String) context.get("endDate");
+        
+        if (barrierMaps == null || barrierMaps.isEmpty()) {
+            return Result.success(AgentChatResponse.builder()
+                    .type(AgentChatResponse.TYPE_TEXT)
+                    .message("⚠️ 没有可导出的数据，请先进行销控查询。")
+                    .sessionId(session.getId())
+                    .step(AgentChatResponse.STEP_COMPLETED)
+                    .actions(Arrays.asList(
+                            AgentChatResponse.Action.builder().label("继续查询").value("continue").type("primary").build()
+                    ))
+                    .build());
+        }
+        
+        // 将LinkedHashMap转换为BarrierGate对象
+        List<BarrierGate> availableBarriers = barrierMaps.stream()
+                .map(map -> {
+                    BarrierGate gate = new BarrierGate();
+                    gate.setId((Integer) map.get("id"));
+                    gate.setGateNo((String) map.get("gateNo"));
+                    gate.setCommunityId((Integer) map.get("communityId"));
+                    gate.setDeviceNo((String) map.get("deviceNo"));
+                    gate.setDoorLocation((String) map.get("doorLocation"));
+                    gate.setDevicePosition((Integer) map.get("devicePosition"));
+                    gate.setScreenPosition((Integer) map.get("screenPosition"));
+                    gate.setLightboxDirection((Integer) map.get("lightboxDirection"));
+                    // 转换Community对象
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> communityMap = (Map<String, Object>) map.get("community");
+                    if (communityMap != null) {
+                        Community community = new Community();
+                        community.setId((Integer) communityMap.get("id"));
+                        community.setBuildingName((String) communityMap.get("buildingName"));
+                        community.setBuildingAddress((String) communityMap.get("buildingAddress"));
+                        community.setCity((String) communityMap.get("city"));
+                        gate.setCommunity(community);
+                    }
+                    return gate;
+                })
+                .collect(Collectors.toList());
+        
+        LocalDate beginDate = LocalDate.parse(beginDateStr);
+        LocalDate endDate = LocalDate.parse(endDateStr);
+        
+        try {
+            // 生成Excel文件并转为Base64
+            String base64Excel = excelExportUtil.exportBarriersToBase64(availableBarriers, city, beginDate, endDate);
+            
+            // 生成文件名
+            String fileName = String.format("%s_%s_销控表.xlsx", 
+                    city, 
+                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+            
+            StringBuilder message = new StringBuilder();
+            message.append("✅ Excel文件已生成！\n\n");
+            message.append("📊 **导出信息**\n");
+            message.append("• 文件名：").append(fileName).append("\n");
+            message.append("• 包含点位：").append(availableBarriers.size()).append("个道闸\n");
+            message.append("• 查询城市：").append(city).append("\n");
+            message.append("• 时间范围：").append(beginDate).append(" 至 ").append(endDate).append("\n\n");
+            message.append("文件已准备好，请点击下方按钮下载。");
+            
+            // 标记会话完成
+            session.setStatus("completed");
+            updateSession(session);
+            
+            return Result.success(AgentChatResponse.builder()
+                    .type(AgentChatResponse.TYPE_TEXT)
+                    .message(message.toString())
+                    .sessionId(session.getId())
+                    .step(AgentChatResponse.STEP_COMPLETED)
+                    .data(mapOf(
+                            "fileName", fileName,
+                            "fileBase64", base64Excel,
+                            "fileType", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            "totalCount", availableBarriers.size()
+                    ))
+                    .actions(Arrays.asList(
+                            AgentChatResponse.Action.builder()
+                                    .label("下载Excel")
+                                    .value("download_excel")
+                                    .type("primary")
+                                    .build(),
+                            AgentChatResponse.Action.builder()
+                                    .label("继续查询")
+                                    .value("continue")
+                                    .type("secondary")
+                                    .build()
+                    ))
+                    .build());
+                    
+        } catch (IOException e) {
+            log.error("导出Excel失败: {}", e.getMessage(), e);
+            return Result.error("导出Excel失败：" + e.getMessage());
         }
     }
     
@@ -272,8 +582,24 @@ public class AgentOrchestratorService {
         AgentIntent intent = fromJson(session.getIntentJson(), AgentIntent.class);
         Map<String, Object> context = fromJson(session.getContextJson(), HashMap.class);
         
-        @SuppressWarnings("unchecked")
-        List<Integer> selectedBarrierIds = (List<Integer>) context.get("selectedBarrierIds");
+        // 从context中获取选中的点位ID列表（处理JSON反序列化后的类型转换）
+        List<Integer> selectedBarrierIds = new ArrayList<>();
+        Object barrierIdsObj = context.get("selectedBarrierIds");
+        if (barrierIdsObj instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> idList = (List<Object>) barrierIdsObj;
+            for (Object id : idList) {
+                if (id instanceof Integer) {
+                    selectedBarrierIds.add((Integer) id);
+                } else if (id instanceof Number) {
+                    selectedBarrierIds.add(((Number) id).intValue());
+                }
+            }
+        }
+        
+        if (selectedBarrierIds == null || selectedBarrierIds.isEmpty()) {
+            return Result.error("未找到选中的点位信息，请重新选择投放日期和点位。");
+        }
         
         SmartPlanResult result = createSmartPlan(intent, selectedBarrierIds);
         

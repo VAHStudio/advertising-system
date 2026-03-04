@@ -1,4 +1,4 @@
-import { Icon } from '../../components/Icon'
+import { Icon } from '../components/Icon'
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -35,7 +35,7 @@ export default function SalesContracts() {
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
         <Header title="销售合同管理" subtitle="管理广告业务销售合同及归档。">
           <button className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-            <span className="material-icons-outlined text-[18px]">post_add</span>
+            <Icon name="post_add" size={18} />
             起草合同
           </button>
         </Header>
@@ -88,11 +88,11 @@ export default function SalesContracts() {
           <div className={`absolute inset-y-0 right-0 w-[450px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedContract ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="material-icons-outlined text-primary">description</span>
+                <Icon name="description" className="text-primary" size={20} />
                 销售合同详情
               </h2>
               <button onClick={closeDrawer} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <span className="material-icons-outlined text-[20px]">close</span>
+                <Icon name="close" size={20} />
               </button>
             </div>
             
@@ -139,7 +139,7 @@ export default function SalesContracts() {
 
                 <div>
                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span className="material-icons-outlined text-[18px] text-slate-400">view_list</span>
+                    <Icon name="view_list" className="text-slate-400" size={18} />
                     约定资源清单
                   </h4>
                   <div className="space-y-2">
@@ -159,7 +159,7 @@ export default function SalesContracts() {
 
                 <div className="flex gap-3 pt-4">
                   <button className="flex-1 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center justify-center gap-2">
-                    <span className="material-icons-outlined text-[18px]">download</span>
+                    <Icon name="download" size={18} />
                     下载合同原件
                   </button>
                 </div>

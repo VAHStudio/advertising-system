@@ -89,6 +89,7 @@ public class AgentIntent {
     
     // 动作类型常量
     public static final String ACTION_CREATE_PLAN = "CREATE_PLAN";
+    public static final String ACTION_QUERY_INVENTORY = "QUERY_INVENTORY";
     public static final String ACTION_QUERY = "QUERY";
     public static final String ACTION_MODIFY = "MODIFY";
     public static final String ACTION_UNKNOWN = "UNKNOWN";

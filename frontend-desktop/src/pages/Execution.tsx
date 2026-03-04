@@ -1,4 +1,4 @@
-import { Icon } from '../../components/Icon'
+import { Icon } from '../components/Icon'
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -140,7 +140,7 @@ export default function Execution() {
                             {task.thumbnail ? (
                               <img alt="Ad creative thumbnail" className="w-full h-full object-cover" src={task.thumbnail} referrerPolicy="no-referrer" />
                             ) : (
-                              <span className="material-icons-outlined text-[20px]">image</span>
+                              <Icon name="image" size={20} />
                             )}
                           </div>
                           <span className="text-xs font-medium">{task.campaign}</span>
@@ -200,11 +200,11 @@ export default function Execution() {
       <div className={`absolute inset-y-0 right-0 w-[450px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedTaskDetail ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
           <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-icons-outlined text-primary">assignment</span>
+            <Icon name="assignment" className="text-primary" size={20} />
             上刊任务详情
           </h2>
           <button onClick={() => setSelectedTaskDetail(null)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-            <span className="material-icons-outlined text-[20px]">close</span>
+            <Icon name="close" size={20} />
           </button>
         </div>
         
@@ -246,7 +246,7 @@ export default function Execution() {
 
             <div>
               <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="material-icons-outlined text-[18px] text-slate-400">format_list_bulleted</span>
+                <Icon name="format_list_bulleted" className="text-slate-400" size={18} />
                 执行点位清单
               </h4>
               <div className="space-y-2">
@@ -278,7 +278,7 @@ export default function Execution() {
         <div className="bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark p-4 flex items-center justify-between flex-shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-4">
             <button onClick={handleCloseReview} className="p-2 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-              <span className="material-icons-outlined">arrow_back</span>
+              <Icon name="arrow_back" size={20} />
             </button>
             <div>
               <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">批量照片审核</h2>
@@ -316,7 +316,7 @@ export default function Execution() {
           <>
             <Header title="上刊执行管理" subtitle="跟踪广告画面的安装进度与监播反馈。">
               <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors">
-                <span className="material-icons-outlined text-[18px]">add</span>
+                <Icon name="add" size={18} />
                 新建上刊单
               </button>
             </Header>

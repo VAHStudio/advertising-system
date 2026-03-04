@@ -247,4 +247,51 @@ public class AiAgentService {
         conversationMapper.deleteById(conversationId);
         messageMapper.deleteByConversationId(conversationId);
     }
+
+    /**
+     * 保存单条消息
+     */
+    @Transactional
+    public AiMessage saveMessage(String conversationId, String role, String content, String metadata) {
+        AiMessage message = new AiMessage();
+        message.setId(UUID.randomUUID().toString().replace("-", ""));
+        message.setConversationId(conversationId);
+        message.setRole(role);
+        message.setContent(content);
+        message.setContentType(AiMessage.TYPE_TEXT);
+        message.setMetadata(metadata);
+        messageMapper.insert(message);
+
+        // 更新对话消息数
+        conversationMapper.incrementMessageCount(conversationId);
+
+        return message;
+    }
+
+    /**
+     * 分页查询消息
+     */
+    public Map<String, Object> getMessagesByConversation(String conversationId, int pageNum, int pageSize) {
+        // 计算偏移量
+        int offset = (pageNum - 1) * pageSize;
+
+        // 查询消息列表
+        List<AiMessage> messages = messageMapper.selectByConversationIdWithPage(conversationId, pageSize, offset);
+
+        // 查询总数
+        int total = messageMapper.countByConversationId(conversationId);
+
+        // 计算总页数
+        int totalPages = (total + pageSize - 1) / pageSize;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("messages", messages);
+        result.put("total", total);
+        result.put("pageNum", pageNum);
+        result.put("pageSize", pageSize);
+        result.put("totalPages", totalPages);
+        result.put("hasMore", pageNum < totalPages);
+
+        return result;
+    }
 }

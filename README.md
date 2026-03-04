@@ -1101,7 +1101,6 @@ POST /api/agent/v2/nlp-select
 | 6 | 到期 |
 | 7 | 已下刊 |
 
-<<<<<<< HEAD
 ---
 
 ## 🗄️ 数据库表
@@ -1135,12 +1134,9 @@ mybatis:
     default-executor-type: simple
     default-statement-timeout: 25000
 ```
-=======
->>>>>>> 6c2772027311a04940084af063be1af46032836d
 
 ### 日志配置
 
-<<<<<<< HEAD
 ```yaml
 logging:
   level:
@@ -1148,7 +1144,62 @@ logging:
     org.springframework.web: info
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-=======
+```
+
+---
+
+## 🔐 环境变量配置
+
+所有敏感信息（API密钥、数据库密码）都通过环境变量管理，不会提交到Git。
+
+### 配置文件
+
+项目使用 `.env.template` 作为模板，你需要：
+
+1. **复制模板文件**
+   ```bash
+   cp .env.template .env
+   ```
+
+2. **填写实际的API密钥和配置**
+
+3. **加载环境变量并启动**
+   
+   **macOS/Linux:**
+   ```bash
+   # 方法1：使用 dotenv
+   export $(cat .env | xargs)
+   
+   # 方法2：使用 source
+   source .env
+   
+   # 启动应用
+   mvn spring-boot:run
+   ```
+   
+   **Windows (PowerShell):**
+   ```powershell
+   # 加载环境变量
+   Get-Content .env | ForEach-Object {
+     $name, $value = $_ -split '=', 2
+     Set-Item -Path Env:$name -Value $value
+   }
+   
+   # 启动应用
+   mvn spring-boot:run
+   ```
+
+### 获取 API Key
+
+1. **Kimi API Key** - 访问 https://platform.moonshot.cn/ 注册并获取
+2. **阿里云语音** - 访问 https://nls-portal.console.aliyun.com/ 申请
+
+⚠️ **注意**：`.env` 文件已被 `.gitignore` 排除，不会被提交到Git。请确保永远不要提交包含真实密钥的文件！
+
+---
+
+## 📁 项目结构
+
 ```
 advertising-system/
 ├── src/
@@ -1225,7 +1276,6 @@ advertising-system/
 │   └── test/
 ├── pom.xml                                            # Maven配置
 └── README.md                                         # API文档
->>>>>>> 6c2772027311a04940084af063be1af46032836d
 ```
 
 ## 🐛 常见问题
@@ -1239,7 +1289,6 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-<<<<<<< HEAD
 ### 2. 数据库连接失败
 
 - 检查 MySQL 服务是否启动
@@ -1307,5 +1356,3 @@ const generateGreeting = () => {
 ---
 
 **Made with ❤️ by 永达传媒技术团队**
-=======
->>>>>>> 6c2772027311a04940084af063be1af46032836d

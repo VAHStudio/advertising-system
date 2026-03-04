@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,14 +86,33 @@ public class AgentsController {
     }
     
     /**
-     * 获取对话历史
+     * 获取对话历史（支持分页）
      */
     @GetMapping("/conversations/{conversationId}")
     public Result<Map<String, Object>> getConversationHistory(
             @PathVariable String conversationId,
-            @RequestParam String user_id) {
+            @RequestParam String user_id,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
         try {
-            Map<String, Object> result = agentService.getConversationHistory(conversationId);
+            // 获取对话基本信息
+            Map<String, Object> conversationData = agentService.getConversationHistory(conversationId);
+
+            // 分页获取消息
+            Map<String, Object> messagesData = agentService.getMessagesByConversation(conversationId, pageNum, pageSize);
+
+            // 合并结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("conversation", conversationData.get("conversation"));
+            result.put("messages", messagesData.get("messages"));
+            result.put("pagination", Map.of(
+                "total", messagesData.get("total"),
+                "pageNum", messagesData.get("pageNum"),
+                "pageSize", messagesData.get("pageSize"),
+                "totalPages", messagesData.get("totalPages"),
+                "hasMore", messagesData.get("hasMore")
+            ));
+
             return Result.success(result);
         } catch (Exception e) {
             log.error("获取对话历史失败", e);

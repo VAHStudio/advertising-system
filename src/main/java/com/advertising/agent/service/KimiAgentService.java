@@ -124,7 +124,7 @@ public class KimiAgentService {
                 Map.of("role", "system", "content", "你是一个广告投放管理系统的AI助手，帮助用户创建广告方案。请用JSON格式返回结果。"),
                 Map.of("role", "user", "content", prompt)
             ),
-            "temperature", 0.3,
+            "temperature", 1.0,
             "response_format", Map.of("type", "json_object"),
             "extra_body", extraBody
         );
@@ -151,11 +151,12 @@ public class KimiAgentService {
             需要提取的字段：
             1. action: 动作类型，可选值：
                - CREATE_PLAN: 创建方案
+               - QUERY_INVENTORY: 查询销控/库存/空闲点位（关键词：销控、库存、空闲点位、空位、可用点位、查空位等）
                - QUERY: 查询
                - MODIFY: 修改
                - UNKNOWN: 无法识别
             2. customer: 客户名称（提取公司名称或品牌名）
-            3. timeDescription: 时间描述（如"3月份"、"下个月"、"2025年春节"等）
+            3. timeDescription: 时间描述（如"3月份"、"下个月"、"2025年春节"、"4月"等）
             4. quantity: 数量（整数，如果没有明确数字返回null）
             5. mediaType: 媒体类型，可选值：
                - barrier: 道闸
@@ -172,6 +173,17 @@ public class KimiAgentService {
               "quantity": 10,
               "mediaType": "barrier",
               "requirements": "选择空闲点位",
+              "confidence": 0.95
+            }
+            
+            销控查询示例：
+            {
+              "action": "QUERY_INVENTORY",
+              "customer": null,
+              "timeDescription": "4月份",
+              "quantity": 100,
+              "mediaType": "barrier",
+              "requirements": "导出成表",
               "confidence": 0.95
             }
             

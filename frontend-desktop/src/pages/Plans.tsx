@@ -1,5 +1,6 @@
-import { Icon } from '../../components/Icon'
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Icon } from '../components/Icon';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { planService, Plan } from '../services/planService';
@@ -39,6 +40,7 @@ const mapStatus = (releaseStatus: number): PlanStatus => {
 };
 
 export default function Plans() {
+  const location = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<DisplayPlan | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
   const [expandedPoints, setExpandedPoints] = useState<string[]>([]);
@@ -72,6 +74,18 @@ export default function Plans() {
       }));
       
       setPlans(displayPlans);
+      
+      // Check location state for auto-open detail
+      if (location.state?.autoOpenDetail && (location.state?.highlightPlanNo || location.state?.highlightPlanId)) {
+        const planIdOrNo = location.state.highlightPlanNo || location.state.highlightPlanId;
+        const targetPlan = displayPlans.find(p => p.id === planIdOrNo);
+        if (targetPlan) {
+          setSelectedPlan(targetPlan);
+          setExpandedPoints(targetPlan.points.map(p => p.id));
+          // Clear location state to prevent reopening on refresh
+          window.history.replaceState({}, document.title);
+        }
+      }
     } catch (err) {
       setError('加载方案数据失败');
       console.error(err);
@@ -276,9 +290,7 @@ export default function Plans() {
                         onClick={() => togglePointExpand(point.id)}
                       >
                         <div className="flex items-center gap-3">
-                          <span className={`material-icons-outlined text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
-                            chevron_right
-                          </span>
+                          <Icon name="chevron_right" className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} size={20} />
                           <div>
                             <h3 className="font-bold text-slate-900 dark:text-white text-sm">{point.name}</h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{point.location} · 包含 {point.slots?.length || 0} 个广告位</p>

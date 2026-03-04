@@ -1,4 +1,4 @@
-import { Icon } from '../../components/Icon'
+import { Icon } from '../components/Icon'
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -90,45 +90,45 @@ export default function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <span className="material-icons-outlined text-[60px] text-primary">attach_money</span>
+            <Icon name="attach_money" className="text-primary" size={60} />
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">总营收 (本月)</div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">¥ 1,245,800</div>
           <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            <span className="material-icons-outlined text-[14px]">trending_up</span>
+            <Icon name="trending_up" size={14} />
             <span>较上月增长 8.4%</span>
           </div>
         </div>
         <div className="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <span className="material-icons-outlined text-[60px] text-blue-500">pie_chart</span>
+            <Icon name="pie_chart" className="text-blue-500" size={60} />
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">平均入驻率</div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">78.5%</div>
           <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            <span className="material-icons-outlined text-[14px]">trending_up</span>
+            <Icon name="trending_up" size={14} />
             <span>较上月提升 2.1%</span>
           </div>
         </div>
         <div className="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <span className="material-icons-outlined text-[60px] text-purple-500">groups</span>
+            <Icon name="groups" className="text-purple-500" size={60} />
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">活跃客户数</div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">142</div>
           <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            <span className="material-icons-outlined text-[14px]">trending_up</span>
+            <Icon name="trending_up" size={14} />
             <span>新增 12 家</span>
           </div>
         </div>
         <div className="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <span className="material-icons-outlined text-[60px] text-orange-500">warning</span>
+            <Icon name="warning" className="text-orange-500" size={60} />
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">设备故障率</div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white mb-2">1.2%</div>
           <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            <span className="material-icons-outlined text-[14px]">trending_down</span>
+            <Icon name="trending_down" size={14} />
             <span>较上月下降 0.5%</span>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function Analytics() {
           <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10"></div>
           <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white opacity-10"></div>
           <div className="flex items-center gap-2 mb-6">
-            <span className="material-icons-outlined text-2xl">auto_awesome</span>
+            <Icon name="auto_awesome" size={24} />
             <h3 className="font-bold text-lg">AI 深度洞察</h3>
           </div>
           <div className="space-y-4 relative z-10">
@@ -313,7 +313,7 @@ export default function Analytics() {
                 ))}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                <span className="material-icons-outlined text-[18px]">expand_more</span>
+                <Icon name="expand_more" size={18} />
               </div>
             </div>
             
@@ -324,7 +324,7 @@ export default function Analytics() {
             </div>
           </div>
           <button className="bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
-            <span className="material-icons-outlined text-[18px]">download</span>
+            <Icon name="download" size={18} />
             导出报告
           </button>
         </Header>

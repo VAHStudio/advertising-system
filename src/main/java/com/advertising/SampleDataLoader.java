@@ -129,10 +129,21 @@ public class SampleDataLoader implements CommandLineRunner {
         try {
             System.out.println("Checking and creating AI tables...");
             
+            // 强制删除旧表（确保结构更新）
+            try {
+                jdbcTemplate.execute("DROP TABLE IF EXISTS ai_messages");
+                System.out.println("Dropped ai_messages");
+            } catch (Exception e) {}
+            
+            try {
+                jdbcTemplate.execute("DROP TABLE IF EXISTS ai_conversations");
+                System.out.println("Dropped ai_conversations");
+            } catch (Exception e) {}
+            
             // 创建 ai_agent 表
             jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS ai_agent (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id VARCHAR(100) PRIMARY KEY,
                     agent_id VARCHAR(50) NOT NULL UNIQUE,
                     name VARCHAR(100) NOT NULL,
                     role VARCHAR(50),
@@ -152,15 +163,20 @@ public class SampleDataLoader implements CommandLineRunner {
             // 创建 ai_conversations 表
             jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS ai_conversations (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    session_id VARCHAR(100) NOT NULL,
+                    id VARCHAR(100) PRIMARY KEY,
+                    
                     agent_id VARCHAR(50) NOT NULL,
+                    agent_name VARCHAR(100),
+                    agent_avatar VARCHAR(500),
                     user_id VARCHAR(50),
                     title VARCHAR(200),
+                    context TEXT,
                     status VARCHAR(20) DEFAULT 'active',
+                    message_count INT DEFAULT 0,
+                    last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    INDEX idx_session_id (session_id),
+                    
                     INDEX idx_agent_id (agent_id),
                     INDEX idx_user_id (user_id),
                     INDEX idx_status (status)
@@ -170,10 +186,11 @@ public class SampleDataLoader implements CommandLineRunner {
             // 创建 ai_messages 表
             jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS ai_messages (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    conversation_id INT NOT NULL,
+                    id VARCHAR(100) PRIMARY KEY,
+                    conversation_id VARCHAR(100) NOT NULL,
                     role VARCHAR(20) NOT NULL,
                     content TEXT NOT NULL,
+                    content_type VARCHAR(50),
                     metadata JSON,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     INDEX idx_conversation_id (conversation_id),
