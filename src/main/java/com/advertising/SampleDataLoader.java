@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 
-@Component
+//@Component
 public class SampleDataLoader implements CommandLineRunner {
 
     @Autowired

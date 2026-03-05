@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { communityService } from '../services/communityService';
+import { frameService } from '../services/frameService';
 import { Icon } from '../components/Icon';
 
 interface SlotItem {
@@ -38,12 +37,12 @@ export default function Inventory() {
     try {
       setLoading(true);
       const [communitiesData, framesData] = await Promise.all([
-        communityService.getAllCommunities(),
-        communityService.getFrames()
+        communityService.getAll(),
+        frameService.getAll()
       ]);
 
-      const communities = Array.isArray(communitiesData) ? communitiesData : communitiesData.data || [];
-      const frames = Array.isArray(framesData) ? framesData : framesData.data || [];
+      const communities = Array.isArray(communitiesData) ? communitiesData : [];
+      const frames = Array.isArray(framesData) ? framesData : [];
 
       const items: SlotItem[] = frames.slice(0, 20).map((frame: any, idx: number) => {
         const community = communities.find((c: any) => c.id === frame.communityId);
@@ -102,16 +101,15 @@ export default function Inventory() {
   const days = Array.from({ length: 30 }, (_, i) => i + 1);
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-      <Sidebar />
-      
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
-        <Header 
-          title="销控查询" 
-          subtitle="实时查询媒体资源的销售状态与档期。"
-        >
+    <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">销控查询</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">实时查询媒体资源的销售状态与档期。</p>
+        </div>
+        <div className="flex items-center gap-4">
           {/* Media Type Dropdown */}
-          <div className="flex items-center gap-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2 mr-4">
+          <div className="flex items-center gap-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2">
             <Icon name="layers" className="text-slate-400" size={20} />
             <select 
               value={mediaType}
@@ -149,9 +147,10 @@ export default function Inventory() {
               档期图
             </button>
           </div>
-        </Header>
+        </div>
+      </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col">
           {/* Search Bar */}
           <div className="p-6 pb-0">
             <div className="flex items-center gap-4">
@@ -304,7 +303,6 @@ export default function Inventory() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }

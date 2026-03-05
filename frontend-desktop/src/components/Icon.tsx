@@ -650,6 +650,13 @@ const iconMapping: Record<string, LucideIcon> = {
   'support_agent': Bot,
   'perm_media': Image,
   'engineering': Wrench,
+
+  // 新增菜单图标
+  'apartment': Building,
+  'gate': Building,
+  'grid_view': LayoutGrid,
+  'directions_car': Car,
+  'view_module': LayoutGrid,
 };
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {

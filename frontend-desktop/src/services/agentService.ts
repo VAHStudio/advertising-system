@@ -118,9 +118,49 @@ export const startConversation = async (userId: string, agentId: string) => {
   if (result.code === 200) {
     return result.data;
   }
-  
-  throw new Error(result.message || '创建对话失败');
+
+  return [];
 };
+
+/**
+ * AI Agent 服务对象 - 统一接口
+ */
+export const agentService = {
+  chat: sendAgentMessage,
+  getAgents: getAgentList,
+  startConversation: (params: { agentId: string; userId: string }) =>
+    startConversation(params.userId, params.agentId),
+  getConversation: (conversationId: string) => getConversationHistory(conversationId, 'user_001'),
+  getUserConversations: (userId: string) => getUserConversations(userId),
+  nlpSelect: (params: { query: string }) =>
+    fetch(`${API_BASE_URL}/agent/v2/nlp-select`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    }).then(r => r.json()).then(r => r.data),
+  getCommunityAvailability: (params: any) =>
+    fetch(`${API_BASE_URL}/agent/v2/community-availability`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    }).then(r => r.json()).then(r => r.data),
+  checkConflicts: (params: any) =>
+    fetch(`${API_BASE_URL}/agent/v2/check-conflicts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    }).then(r => r.json()).then(r => r.data),
+  getCities: () =>
+    fetch(`${API_BASE_URL}/agents/cities`).then(r => r.json()).then(r => r.data || []),
+  createSmartPlan: (params: any) =>
+    fetch(`${API_BASE_URL}/agents/plan/create-smart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    }).then(r => r.json()).then(r => r.data),
+};
+
+export default agentService;
 
 /**
  * 获取对话历史

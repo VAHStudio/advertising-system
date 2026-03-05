@@ -1,5 +1,12 @@
 export { default as api, request } from './api';
 export { default as communityService } from './communityService';
+export { default as barrierGateService } from './barrierGateService';
+export { default as frameService } from './frameService';
 export { default as planService } from './planService';
+export { default as planCommunityService } from './planCommunityService';
+export { default as planBarrierService } from './planBarrierService';
+export { default as planFrameService } from './planFrameService';
 export { default as dashboardService } from './dashboardService';
+export { default as agentService } from './agentService';
+export { default as speechService } from './speechService';
 export * from './agentService';

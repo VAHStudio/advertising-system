@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Icon } from '../components/Icon';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { planService, Plan } from '../services/planService';
 
 // --- Types ---
@@ -57,7 +55,7 @@ export default function Plans() {
     try {
       setLoading(true);
       const plansResponse = await planService.getAllPlans();
-      const plansData = plansResponse.data || plansResponse;
+      const plansData = plansResponse;
       
       // Transform API data to display format
       const displayPlans: DisplayPlan[] = plansData.map(plan => ({
@@ -364,65 +362,56 @@ export default function Plans() {
 
   if (loading) {
     return (
-      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-slate-500 dark:text-slate-400">加载方案数据中...</p>
-          </div>
-        </main>
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-slate-500 dark:text-slate-400">加载方案数据中...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <button 
-              onClick={loadPlansData}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-            >
-              重新加载
-            </button>
-          </div>
-        </main>
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={loadPlansData}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+          >
+            重新加载
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-      <Sidebar />
-      
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
-        <Header title="广告方案管理">
-          {selectedPlan ? (
-            <button 
-              onClick={() => setSelectedPlan(null)}
-              className="px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
-            >
-              <Icon name="arrow_back" size={18} />
-              返回看板
-            </button>
-          ) : (
-            <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-              <Icon name="add" size={18} />
-              创建方案
-            </button>
-          )}
-        </Header>
+    <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">广告方案管理</h1>
+        {selectedPlan ? (
+          <button 
+            onClick={() => setSelectedPlan(null)}
+            className="px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+          >
+            <Icon name="arrow_back" size={18} />
+            返回看板
+          </button>
+        ) : (
+          <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
+            <Icon name="add" size={18} />
+            创建方案
+          </button>
+        )}
+      </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-            {selectedPlan ? renderDetails() : renderKanban()}
-          </div>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          {selectedPlan ? renderDetails() : renderKanban()}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { dashboardService, DashboardStats } from '../services/dashboardService';
 import { Icon } from '../components/Icon';
 
@@ -30,72 +28,33 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 antialiased h-screen overflow-hidden flex">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 relative">
-          <Header title="智能工作台" subtitle="加载中...">
-            <div className="relative hidden md:block">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="text-subtext-light dark:text-subtext-dark" size={20} />
-              </span>
-              <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
-            </div>
-          </Header>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-subtext-light dark:text-subtext-dark">加载数据中...</p>
-            </div>
-          </div>
-        </main>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-subtext-light dark:text-subtext-dark">加载数据中...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 antialiased h-screen overflow-hidden flex">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 relative">
-          <Header title="智能工作台" subtitle="加载失败">
-            <div className="relative hidden md:block">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="text-subtext-light dark:text-subtext-dark" size={20} />
-              </span>
-              <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
-            </div>
-          </Header>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-red-500 mb-4">{error}</p>
-              <button 
-                onClick={loadDashboardData}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-              >
-                重新加载
-              </button>
-            </div>
-          </div>
-        </main>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={loadDashboardData}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+          >
+            重新加载
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 antialiased h-screen overflow-hidden flex">
-      <Sidebar />
-      <main className="flex-1 flex flex-col min-w-0 relative">
-        <Header title="智能工作台" subtitle="早上好，Alex。这是您的每日概览。">
-          <div className="relative hidden md:block">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon name="search" className="text-subtext-light dark:text-subtext-dark" size={20} />
-            </span>
-            <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
-          </div>
-        </Header>
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="p-8 max-w-7xl mx-auto space-y-8 pb-24">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 pb-24">
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-text-light dark:text-text-dark flex items-center gap-2">
@@ -276,18 +235,5 @@ export default function Dashboard() {
             </div>
           </section>
         </div>
-        </div>
-      </main>
-
-      <div className="fixed bottom-8 right-8 z-50 group">
-        <div className="absolute bottom-full right-0 mb-4 w-64 p-4 bg-white dark:bg-surface-dark rounded-xl shadow-xl border border-gray-100 dark:border-gray-600 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
-          <p className="text-sm text-text-light dark:text-text-dark font-medium">今天有什么可以帮您管理资源的吗？</p>
-          <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-white dark:bg-surface-dark border-b border-r border-gray-100 dark:border-gray-600 transform rotate-45"></div>
-        </div>
-        <button className="ai-pulse flex items-center justify-center w-14 h-14 bg-gradient-to-r from-primary to-accent rounded-full shadow-lg text-white hover:scale-105 transition-transform duration-200">
-          <Icon name="smart_toy" size={24} />
-        </button>
-      </div>
-    </div>
   );
 }

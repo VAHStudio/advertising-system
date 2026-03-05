@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { planService } from '../services/planService';
 import { Icon } from '../components/Icon';
 
@@ -47,7 +45,7 @@ export default function Customers() {
     try {
       setLoading(true);
       const plansResponse = await planService.getAllPlans();
-      const plansData = plansResponse.data || plansResponse;
+      const plansData = plansResponse;
       
       // Extract unique customers from plans
       const customerMap = new Map<string, Customer>();
@@ -133,21 +131,19 @@ export default function Customers() {
   );
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-      <Sidebar />
-      
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
-        <Header 
-          title="客户管理" 
-          subtitle="管理您的客户档案与跟进记录。"
-        >
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-medium shadow-lg shadow-blue-500/25 transition-all">
-            <Icon name="person_add" size={20} />
-            新增客户
-          </button>
-        </Header>
+    <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">客户管理</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">管理您的客户档案与跟进记录。</p>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-medium shadow-lg shadow-blue-500/25 transition-all">
+          <Icon name="person_add" size={20} />
+          新增客户
+        </button>
+      </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -246,75 +242,74 @@ export default function Customers() {
           </div>
         </div>
 
-        {/* Customer Detail Drawer */}
-        <div className={`absolute inset-y-0 right-0 w-[400px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedCustomer ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-            <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-              <Icon name="business" className="text-primary" size={20} />
-              客户详情
-            </h2>
-            <button 
-              onClick={() => setSelectedCustomer(null)} 
-              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-              <Icon name="close" size={20} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-            {selectedCustomer && (
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{selectedCustomer.name}</h3>
-                <p className="text-sm text-slate-500 mb-4">{selectedCustomer.id}</p>
-                
-                <div className="space-y-4 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-border-light dark:border-border-dark">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">行业</span>
-                    <span className="font-medium text-slate-900 dark:text-white">{selectedCustomer.industry}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">联系人</span>
-                    <span className="font-medium text-slate-900 dark:text-white">{selectedCustomer.contact}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">级别</span>
-                    <span className="font-medium">{getLevelBadge(selectedCustomer.level)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">最后跟进</span>
-                    <span className="font-medium text-slate-900 dark:text-white">{selectedCustomer.lastFollowUp}</span>
-                  </div>
+      {/* Customer Detail Drawer */}
+      <div className={`absolute inset-y-0 right-0 w-[400px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedCustomer ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+          <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+            <Icon name="business" className="text-primary" size={20} />
+            客户详情
+          </h2>
+          <button 
+            onClick={() => setSelectedCustomer(null)} 
+            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+          {selectedCustomer && (
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{selectedCustomer.name}</h3>
+              <p className="text-sm text-slate-500 mb-4">{selectedCustomer.id}</p>
+              
+              <div className="space-y-4 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-border-light dark:border-border-dark">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">行业</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{selectedCustomer.industry}</span>
                 </div>
-
-                <div className="mt-6 space-y-3">
-                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">跟进记录</h4>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg border border-border-light dark:border-border-dark">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-slate-500">2024-07-01</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">电话</span>
-                      </div>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">沟通下半年投放计划</p>
-                    </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg border border-border-light dark:border-border-dark">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-slate-500">2024-06-15</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">拜访</span>
-                      </div>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">确认夏季大促方案</p>
-                    </div>
-                  </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">联系人</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{selectedCustomer.contact}</span>
                 </div>
-
-                <div className="mt-6 pt-6 border-t border-border-light dark:border-border-dark">
-                  <button className="w-full py-2.5 bg-primary hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors">
-                    编辑客户
-                  </button>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">级别</span>
+                  <span className="font-medium">{getLevelBadge(selectedCustomer.level)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">最后跟进</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{selectedCustomer.lastFollowUp}</span>
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="mt-6 space-y-3">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">跟进记录</h4>
+                <div className="space-y-2">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg border border-border-light dark:border-border-dark">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-500">2024-07-01</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">电话</span>
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">沟通下半年投放计划</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg border border-border-light dark:border-border-dark">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-500">2024-06-15</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">拜访</span>
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">确认夏季大促方案</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-border-light dark:border-border-dark">
+                <button className="w-full py-2.5 bg-primary hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors">
+                  编辑客户
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

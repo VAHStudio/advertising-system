@@ -1,7 +1,5 @@
 import { Icon } from '../components/Icon'
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 
 // --- Types ---
 interface Task {
@@ -308,22 +306,20 @@ export default function Execution() {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-      {!reviewMode && <Sidebar />}
-      
-      <main className="flex-1 flex flex-col min-w-0 relative">
-        {!reviewMode && (
-          <>
-            <Header title="上刊执行管理" subtitle="跟踪广告画面的安装进度与监播反馈。">
-              <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors">
-                <Icon name="add" size={18} />
-                新建上刊单
-              </button>
-            </Header>
-          </>
-        )}
-        {reviewMode ? renderBatchReview() : renderList()}
-      </main>
+    <div className="flex-1 flex flex-col min-w-0 relative">
+      {!reviewMode && (
+        <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">上刊执行管理</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">跟踪广告画面的安装进度与监播反馈。</p>
+          </div>
+          <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors">
+            <Icon name="add" size={18} />
+            新建上刊单
+          </button>
+        </div>
+      )}
+      {reviewMode ? renderBatchReview() : renderList()}
     </div>
   );
 }

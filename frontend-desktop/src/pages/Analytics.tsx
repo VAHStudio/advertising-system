@@ -1,7 +1,5 @@
 import { Icon } from '../components/Icon'
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Legend, LineChart, Line, ComposedChart, ScatterChart, Scatter, ZAxis,
@@ -296,51 +294,49 @@ export default function Analytics() {
   );
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-      <Sidebar />
-      
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
-        <Header title="智能数据看板">
-          <div className="flex items-center gap-4 mr-4">
-            <div className="relative">
-              <select 
-                value={selectedReport}
-                onChange={(e) => setSelectedReport(e.target.value)}
-                className="appearance-none bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark text-slate-700 dark:text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-64 p-2 pr-8 shadow-sm cursor-pointer"
-              >
-                {reportOptions.map(option => (
-                  <option key={option.id} value={option.id}>{option.name}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                <Icon name="expand_more" size={18} />
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-              <button className="px-3 py-1.5 bg-white dark:bg-slate-700 shadow-sm rounded-md text-sm font-medium text-slate-800 dark:text-slate-200">本月</button>
-              <button className="px-3 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium rounded-md transition-colors">本季度</button>
-              <button className="px-3 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium rounded-md transition-colors">全年</button>
+    <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">智能数据看板</h1>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <select 
+              value={selectedReport}
+              onChange={(e) => setSelectedReport(e.target.value)}
+              className="appearance-none bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark text-slate-700 dark:text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-64 p-2 pr-8 shadow-sm cursor-pointer"
+            >
+              {reportOptions.map(option => (
+                <option key={option.id} value={option.id}>{option.name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+              <Icon name="expand_more" size={18} />
             </div>
           </div>
+          
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+            <button className="px-3 py-1.5 bg-white dark:bg-slate-700 shadow-sm rounded-md text-sm font-medium text-slate-800 dark:text-slate-200">本月</button>
+            <button className="px-3 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium rounded-md transition-colors">本季度</button>
+            <button className="px-3 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium rounded-md transition-colors">全年</button>
+          </div>
+          
           <button className="bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
             <Icon name="download" size={18} />
             导出报告
           </button>
-        </Header>
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-          <div className="max-w-7xl mx-auto">
-            {selectedReport === 'overview' && renderOverview()}
-            {selectedReport === 'publish_rate' && renderPublishRate()}
-            {selectedReport === 'contract_amortization' && renderContractAmortization()}
-            {selectedReport === 'worker_stats' && renderWorkerStats()}
-            {selectedReport === 'sales_funnel' && renderSalesFunnel()}
-            {selectedReport === 'roi' && renderROI()}
-            {selectedReport === 'revenue_amortization' && renderRevenueAmortization()}
-          </div>
         </div>
-      </main>
+      </div>
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+        <div className="max-w-7xl mx-auto">
+          {selectedReport === 'overview' && renderOverview()}
+          {selectedReport === 'publish_rate' && renderPublishRate()}
+          {selectedReport === 'contract_amortization' && renderContractAmortization()}
+          {selectedReport === 'worker_stats' && renderWorkerStats()}
+          {selectedReport === 'sales_funnel' && renderSalesFunnel()}
+          {selectedReport === 'roi' && renderROI()}
+          {selectedReport === 'revenue_amortization' && renderRevenueAmortization()}
+        </div>
+      </div>
     </div>
   );
 }

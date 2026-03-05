@@ -47,28 +47,48 @@ export interface Frame {
 
 export const communityService = {
   // 获取所有社区
-  getAllCommunities: () => request<Community[]>('/community/list'),
+  getAll: () => request<Community[]>('/community/list'),
 
   // 根据ID获取社区
-  getCommunityById: (id: number) => request<Community>(`/community/${id}`),
+  getById: (id: number) => request<Community>(`/community/${id}`),
+
+  // 根据社区编号获取
+  getByNo: (communityNo: string) => request<Community>(`/community/no/${communityNo}`),
 
   // 获取社区列表（分页）
-  getCommunities: (page: number = 1, size: number = 10) =>
-    request<Community[]>(`/community/list?page=${page}&size=${size}`),
+  getPage: (page: number = 1, size: number = 10) =>
+    request<Community[]>('/community/page', {
+      method: 'POST',
+      body: JSON.stringify({ page, size }),
+    }),
 
-  // 获取道闸列表
-  getBarrierGates: () => request<BarrierGate[]>('/barrier-gate/list'),
+  // 根据城市获取社区
+  getByCity: (city: string) => request<Community[]>(`/community/city/${city}`),
 
-  // 获取框架列表
-  getFrames: () => request<Frame[]>('/frame/list'),
+  // 创建社区
+  create: (data: Partial<Community>) =>
+    request<Community>('/community', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-  // 根据社区获取道闸
-  getBarriersByCommunity: (communityId: number) =>
-    request<BarrierGate[]>(`/barrier-gates/community/${communityId}`),
+  // 更新社区
+  update: (data: Partial<Community>) =>
+    request<Community>('/community', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 
-  // 根据社区获取框架
-  getFramesByCommunity: (communityId: number) =>
-    request<Frame[]>(`/frames/community/${communityId}`),
+  // 删除社区
+  delete: (id: number) =>
+    request<void>(`/community/${id}`, { method: 'DELETE' }),
+
+  // 批量删除社区
+  deleteBatch: (ids: number[]) =>
+    request<void>('/community/batch', {
+      method: 'DELETE',
+      body: JSON.stringify(ids),
+    }),
 };
 
 export default communityService;

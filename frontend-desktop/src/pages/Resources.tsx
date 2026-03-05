@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '../components/Icon';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { communityService, Community, BarrierGate, Frame } from '../services/communityService';
+import { barrierGateService } from '../services/barrierGateService';
+import { frameService } from '../services/frameService';
 
 // --- Types ---
 interface Point {
@@ -34,6 +34,9 @@ interface AdSlot {
   direction?: string;
   orientation?: string;
   inOut?: string;
+  format?: string;
+  illumination?: string;
+  traffic?: string;
 }
 
 const mediaTypes = ['电梯框架', '道闸', '户外大牌'];
@@ -62,15 +65,15 @@ export default function Resources() {
     try {
       setLoading(true);
       const [communitiesData, barriersData, framesData] = await Promise.all([
-        communityService.getAllCommunities(),
-        communityService.getBarrierGates(),
-        communityService.getFrames()
+        communityService.getAll(),
+        barrierGateService.getAll(),
+        frameService.getAll()
       ]);
       
-      // Handle API response format {code: 200, data: [...]}
-      const communities = Array.isArray(communitiesData) ? communitiesData : communitiesData.data || [];
-      const barriers = Array.isArray(barriersData) ? barriersData : barriersData.data || [];
-      const frames = Array.isArray(framesData) ? framesData : framesData.data || [];
+      // Handle API response
+      const communities = Array.isArray(communitiesData) ? communitiesData : [];
+      const barriers = Array.isArray(barriersData) ? barriersData : [];
+      const frames = Array.isArray(framesData) ? framesData : [];
       
       setCommunities(communities);
       setBarrierGates(barriers);
@@ -181,45 +184,38 @@ export default function Resources() {
 
   if (loading) {
     return (
-      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-slate-500 dark:text-slate-400">加载资源数据中...</p>
-          </div>
-        </main>
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-slate-500 dark:text-slate-400">加载资源数据中...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <button 
-              onClick={loadResourcesData}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-            >
-              重新加载
-            </button>
-          </div>
-        </main>
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={loadResourcesData}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+          >
+            重新加载
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
-      {!isMapMode && <Sidebar />}
-      
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
-        {!isMapMode && (
-          <Header title="资源管理中心">
-            <div className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mr-4">
+    <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative">
+      {!isMapMode && (
+        <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">资源管理中心</h1>
+            <div className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
               <button 
                 onClick={() => { setActiveTab('points'); closeDrawer(); }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'points' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
@@ -234,7 +230,7 @@ export default function Resources() {
               </button>
             </div>
             {activeTab === 'slots' && (
-              <div className="flex items-center gap-2 bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-1.5 shadow-sm mr-4">
+              <div className="flex items-center gap-2 bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-1.5 shadow-sm">
                 <Icon name="category" className="text-slate-400" size={18} />
                 <select 
                   value={selectedMediaType}
@@ -247,14 +243,15 @@ export default function Resources() {
                 </select>
               </div>
             )}
-            <button className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-              <Icon name="add" size={18} />
-              新增{activeTab === 'points' ? '点位' : '广告位'}
-            </button>
-          </Header>
-        )}
+          </div>
+          <button className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
+            <Icon name="add" size={18} />
+            新增{activeTab === 'points' ? '点位' : '广告位'}
+          </button>
+        </div>
+      )}
 
-        <div className="flex-1 overflow-hidden flex relative">
+      <div className="flex-1 overflow-hidden flex relative">
           {activeTab === 'points' && isMapMode ? (
              <div className="flex-1 flex overflow-hidden">
                <div className="w-80 bg-white dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col z-10">
@@ -354,52 +351,51 @@ export default function Resources() {
             </div>
           )}
 
-          {/* Slide-out Drawer */}
-          <div className={`absolute inset-y-0 right-0 w-[400px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedPoint || selectedSlot ? 'translate-x-0' : 'translate-x-full'}`}>
-            <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-              <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                <Icon name={selectedPoint ? "place" : "ad_units"} className="text-primary" size={20} />
-                {selectedPoint ? '点位详情' : '广告位详情'}
-              </h2>
-              <button onClick={closeDrawer} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <Icon name="close" size={20} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-              {selectedPoint && (
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{selectedPoint.name}</h3>
-                  <p className="text-sm text-slate-500 mb-4">{selectedPoint.address}</p>
-                  <div className="aspect-video rounded-lg overflow-hidden border border-border-light dark:border-border-dark mb-4">
-                    <img src={selectedPoint.photos[0]} alt="Point" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div className="space-y-3 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-border-light dark:border-border-dark">
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">类型</span><span className="font-medium text-slate-900 dark:text-white">{selectedPoint.type}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">总广告位</span><span className="font-medium text-slate-900 dark:text-white">{selectedPoint.totalSlots}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">可用空位</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{selectedPoint.availableSlots}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">广告位类型</span><span className="font-medium text-slate-900 dark:text-white">{selectedPoint.slotTypes.join(', ')}</span></div>
-                  </div>
+        {/* Slide-out Drawer */}
+        <div className={`absolute inset-y-0 right-0 w-[400px] bg-white dark:bg-surface-dark shadow-2xl border-l border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out flex flex-col z-20 ${selectedPoint || selectedSlot ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+            <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <Icon name={selectedPoint ? "place" : "ad_units"} className="text-primary" size={20} />
+              {selectedPoint ? '点位详情' : '广告位详情'}
+            </h2>
+            <button onClick={closeDrawer} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+              <Icon name="close" size={20} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+            {selectedPoint && (
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{selectedPoint.name}</h3>
+                <p className="text-sm text-slate-500 mb-4">{selectedPoint.address}</p>
+                <div className="aspect-video rounded-lg overflow-hidden border border-border-light dark:border-border-dark mb-4">
+                  <img src={selectedPoint.photos[0]} alt="Point" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
-              )}
-              {selectedSlot && (
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{selectedSlot.pointName}</h3>
-                  <p className="text-sm text-primary font-medium mb-4">{selectedSlot.mediaType} - {selectedSlot.id}</p>
-                  <div className="aspect-video rounded-lg overflow-hidden border border-border-light dark:border-border-dark mb-4">
-                    <img src={selectedSlot.photos[0]} alt="Current Ad" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div className="space-y-3 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-border-light dark:border-border-dark">
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">规格尺寸</span><span className="font-medium text-slate-900 dark:text-white">{selectedSlot.specifications}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">刊例价</span><span className="font-medium text-emerald-600 dark:text-emerald-400">¥ {selectedSlot.price.toLocaleString()} / {selectedSlot.unit}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">位置</span><span className="font-medium text-slate-900 dark:text-white">{selectedSlot.location}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">状态</span><span className="font-medium text-slate-900 dark:text-white">{selectedSlot.status}</span></div>
-                  </div>
+                <div className="space-y-3 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-border-light dark:border-border-dark">
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">类型</span><span className="font-medium text-slate-900 dark:text-white">{selectedPoint.type}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">总广告位</span><span className="font-medium text-slate-900 dark:text-white">{selectedPoint.totalSlots}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">可用空位</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{selectedPoint.availableSlots}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">广告位类型</span><span className="font-medium text-slate-900 dark:text-white">{selectedPoint.slotTypes.join(', ')}</span></div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+            {selectedSlot && (
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{selectedSlot.pointName}</h3>
+                <p className="text-sm text-primary font-medium mb-4">{selectedSlot.mediaType} - {selectedSlot.id}</p>
+                <div className="aspect-video rounded-lg overflow-hidden border border-border-light dark:border-border-dark mb-4">
+                  <img src={selectedSlot.photos[0]} alt="Current Ad" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                </div>
+                <div className="space-y-3 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-border-light dark:border-border-dark">
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">规格尺寸</span><span className="font-medium text-slate-900 dark:text-white">{selectedSlot.specifications}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">刊例价</span><span className="font-medium text-emerald-600 dark:text-emerald-400">¥ {selectedSlot.price.toLocaleString()} / {selectedSlot.unit}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">位置</span><span className="font-medium text-slate-900 dark:text-white">{selectedSlot.location}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">状态</span><span className="font-medium text-slate-900 dark:text-white">{selectedSlot.status}</span></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
