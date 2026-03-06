@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * 初始化演示数据
  */
-@Component
+//@Component
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired
