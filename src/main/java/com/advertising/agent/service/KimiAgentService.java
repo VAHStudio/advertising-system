@@ -32,7 +32,7 @@ public class KimiAgentService {
     @Value("${kimi.api.model:kimi-latest}")
     private String model;
     
-    @Value("${kimi.api.thinking:enabled}")
+    @Value("${kimi.api.thinking:disabled}")
     private String thinkingMode;
     
     private final RestTemplate restTemplate = new RestTemplate();

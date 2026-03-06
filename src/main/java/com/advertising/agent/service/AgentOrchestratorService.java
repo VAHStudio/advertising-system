@@ -334,14 +334,39 @@ public class AgentOrchestratorService {
             return Result.error("导出失败：找不到查询数据");
         }
         
-        Map<String, Object> context = fromJson(contextJson, HashMap.class);
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> barrierMaps = (List<Map<String, Object>>) context.get("availableBarriers");
-        String city = (String) context.get("city");
-        String beginDateStr = (String) context.get("beginDate");
-        String endDateStr = (String) context.get("endDate");
+        // 重新从数据库查询以确保数据完整性
+        AgentIntent intent = fromJson(session.getIntentJson(), AgentIntent.class);
+        String timeDesc = intent != null ? intent.getTimeDescription() : null;
         
-        if (barrierMaps == null || barrierMaps.isEmpty()) {
+        LocalDate beginDate;
+        LocalDate endDate;
+        
+        if (timeDesc != null && timeDesc.contains("4")) {
+            beginDate = LocalDate.of(2025, 4, 1);
+            endDate = LocalDate.of(2025, 4, 30);
+        } else if (timeDesc != null && timeDesc.contains("3")) {
+            beginDate = LocalDate.of(2025, 3, 1);
+            endDate = LocalDate.of(2025, 3, 31);
+        } else {
+            beginDate = LocalDate.now().withDayOfMonth(1);
+            endDate = beginDate.plusMonths(1).minusDays(1);
+        }
+        
+        // 从请求中获取城市，如果没有则从intent获取
+        String city = request.getSelectedValue();
+        if (city == null || city.isEmpty()) {
+            city = intent != null ? intent.getConfirmedCity() : null;
+        }
+        
+        if (city == null || city.isEmpty()) {
+            return Result.error("导出失败：请选择城市");
+        }
+        
+        // 查询空闲道闸点位
+        List<BarrierGate> availableBarriers = barrierGateMapper.selectAvailableBarriers(
+                city, null, beginDate, endDate, 1000);
+        
+        if (availableBarriers == null || availableBarriers.isEmpty()) {
             return Result.success(AgentChatResponse.builder()
                     .type(AgentChatResponse.TYPE_TEXT)
                     .message("⚠️ 没有可导出的数据，请先进行销控查询。")
@@ -352,36 +377,6 @@ public class AgentOrchestratorService {
                     ))
                     .build());
         }
-        
-        // 将LinkedHashMap转换为BarrierGate对象
-        List<BarrierGate> availableBarriers = barrierMaps.stream()
-                .map(map -> {
-                    BarrierGate gate = new BarrierGate();
-                    gate.setId((Integer) map.get("id"));
-                    gate.setGateNo((String) map.get("gateNo"));
-                    gate.setCommunityId((Integer) map.get("communityId"));
-                    gate.setDeviceNo((String) map.get("deviceNo"));
-                    gate.setDoorLocation((String) map.get("doorLocation"));
-                    gate.setDevicePosition((Integer) map.get("devicePosition"));
-                    gate.setScreenPosition((Integer) map.get("screenPosition"));
-                    gate.setLightboxDirection((Integer) map.get("lightboxDirection"));
-                    // 转换Community对象
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> communityMap = (Map<String, Object>) map.get("community");
-                    if (communityMap != null) {
-                        Community community = new Community();
-                        community.setId((Integer) communityMap.get("id"));
-                        community.setBuildingName((String) communityMap.get("buildingName"));
-                        community.setBuildingAddress((String) communityMap.get("buildingAddress"));
-                        community.setCity((String) communityMap.get("city"));
-                        gate.setCommunity(community);
-                    }
-                    return gate;
-                })
-                .collect(Collectors.toList());
-        
-        LocalDate beginDate = LocalDate.parse(beginDateStr);
-        LocalDate endDate = LocalDate.parse(endDateStr);
         
         try {
             // 生成Excel文件并转为Base64

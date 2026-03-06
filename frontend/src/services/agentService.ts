@@ -7,6 +7,7 @@ export interface AgentChatRequest {
   message: string;
   sessionId?: string;
   agentId?: string;
+  selectedValue?: string;
 }
 
 export interface AgentChatResponse {

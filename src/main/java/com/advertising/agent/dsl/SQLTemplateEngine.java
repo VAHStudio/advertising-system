@@ -364,10 +364,21 @@ public class SQLTemplateEngine {
     }
     
     /**
-     * 转义SQL字符串
+     * 转义SQL字符串 - 增强版，防止SQL注入
      */
     private String escapeString(String str) {
-        return str.replace("'", "''").replace("\\", "\\\\");
+        if (str == null) {
+            return "";
+        }
+        return str
+            .replace("'", "''")          // 转义单引号
+            .replace("\\", "\\\\")      // 转义反斜杠
+            .replace("\n", "\\n")       // 转义换行符
+            .replace("\r", "\\r")       // 转义回车符
+            .replace("\t", "\\t")       // 转义制表符
+            .replace("\b", "\\b")       // 转义退格符
+            .replace("\f", "\\f")       // 转义换页符
+            .replace("\0", "");          // 移除null字符
     }
     
     /**

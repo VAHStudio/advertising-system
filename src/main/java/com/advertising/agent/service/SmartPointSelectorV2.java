@@ -55,6 +55,32 @@ public class SmartPointSelectorV2 {
      */
     public PointSelectionResult selectPoints(PointSelectionDSL dsl) {
         try {
+            // 参数校验
+            if (dsl == null) {
+                log.error("DSL参数为空");
+                return PointSelectionResult.error("DSL参数不能为空");
+            }
+            
+            if (dsl.getMediaType() == null || dsl.getMediaType().trim().isEmpty()) {
+                log.error("媒体类型不能为空");
+                return PointSelectionResult.error("媒体类型不能为空");
+            }
+            
+            if (dsl.getDateRange() == null) {
+                log.error("日期范围不能为空");
+                return PointSelectionResult.error("日期范围不能为空");
+            }
+            
+            if (dsl.getDateRange().getBeginDate() == null || dsl.getDateRange().getEndDate() == null) {
+                log.error("开始日期和结束日期不能为空");
+                return PointSelectionResult.error("开始日期和结束日期不能为空");
+            }
+            
+            if (dsl.getDateRange().getBeginDate().isAfter(dsl.getDateRange().getEndDate())) {
+                log.error("开始日期不能晚于结束日期");
+                return PointSelectionResult.error("开始日期不能晚于结束日期");
+            }
+            
             log.info("开始智能点位选择, DSL: {}", dsl);
             
             // 1. 生成SQL
