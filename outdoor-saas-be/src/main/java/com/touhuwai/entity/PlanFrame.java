@@ -2,15 +2,16 @@ package com.touhuwai.entity;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 方案框架明细实体类
  * 对应数据库表：plan_frame
  */
 public class PlanFrame implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     private Integer id;
     private Integer planId;
     private Integer frameId;
@@ -18,7 +19,9 @@ public class PlanFrame implements Serializable {
     private LocalDate releaseDateBegin;
     private LocalDate releaseDateEnd;
     private Integer releaseStatus;
-    
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     // 关联对象
     private Plan plan;
     private Frame frame;
@@ -100,8 +103,24 @@ public class PlanFrame implements Serializable {
     public PlanCommunity getPlanCommunity() {
         return planCommunity;
     }
-    
+
     public void setPlanCommunity(PlanCommunity planCommunity) {
         this.planCommunity = planCommunity;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

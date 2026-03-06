@@ -2,32 +2,39 @@ package com.touhuwai.entity;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 方案社区关联实体类
  * 对应数据库表：plan_community
  */
 public class PlanCommunity implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     private Integer id;
-    
+
     private Integer planId;
-    
+
     private Integer communityId;
-    
+
     private LocalDate releaseDateBegin;
-    
+
     private LocalDate releaseDateEnd;
-    
+
     private Integer barrierRequiredQty;
-    
+
     private Integer frameRequiredQty;
-    
+
+    private Integer releaseStatus;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     // 关联对象
     private Plan plan;
-    
+
     private Community community;
 
     // Getters and Setters
@@ -87,6 +94,14 @@ public class PlanCommunity implements Serializable {
         this.frameRequiredQty = frameRequiredQty;
     }
 
+    public Integer getReleaseStatus() {
+        return releaseStatus;
+    }
+
+    public void setReleaseStatus(Integer releaseStatus) {
+        this.releaseStatus = releaseStatus;
+    }
+
     public Plan getPlan() {
         return plan;
     }
@@ -101,5 +116,21 @@ public class PlanCommunity implements Serializable {
 
     public void setCommunity(Community community) {
         this.community = community;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

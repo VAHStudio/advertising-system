@@ -112,4 +112,23 @@ public class BarrierGateServiceImpl implements BarrierGateService {
     public int batchDelete(List<Integer> ids) {
         return barrierGateMapper.batchDelete(ids);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<BarrierGate> getListByParam(com.touhuwai.dto.param.BarrierGateQueryParam param) {
+        return barrierGateMapper.selectListByParam(param);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<BarrierGate> getPageByParam(com.touhuwai.dto.param.BarrierGateQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<BarrierGate> list = barrierGateMapper.selectListByParam(param);
+        PageInfo<BarrierGate> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
+    }
 }

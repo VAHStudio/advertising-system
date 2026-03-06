@@ -122,4 +122,18 @@ public interface BarrierGateMapper {
             @Param("city") String city,
             @Param("beginDate") java.time.LocalDate beginDate,
             @Param("endDate") java.time.LocalDate endDate);
+
+    /**
+     * 根据查询参数查询道闸列表
+     * @param param 查询参数
+     * @return 道闸列表
+     */
+    List<BarrierGate> selectListByParam(com.touhuwai.dto.param.BarrierGateQueryParam param);
+
+    /**
+     * 根据查询参数统计数量
+     * @param param 查询参数
+     * @return 数量
+     */
+    Long countByParam(com.touhuwai.dto.param.BarrierGateQueryParam param);
 }

@@ -10,6 +10,9 @@
         <result column="release_date_end" property="releaseDateEnd"/>
         <result column="barrier_required_qty" property="barrierRequiredQty"/>
         <result column="frame_required_qty" property="frameRequiredQty"/>
+        <result column="release_status" property="releaseStatus"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
     
     <resultMap id="WithRelationsResultMap" type="com.touhuwai.entity.PlanCommunity" extends="BaseResultMap">
@@ -30,8 +33,9 @@
     </resultMap>
     
     <sql id="Base_Column_List">
-        pc.id, pc.plan_id, pc.community_id, pc.release_date_begin, pc.release_date_end, 
-        pc.barrier_required_qty, pc.frame_required_qty
+        pc.id, pc.plan_id, pc.community_id, pc.release_date_begin, pc.release_date_end,
+        pc.barrier_required_qty, pc.frame_required_qty, pc.release_status,
+        pc.created_at, pc.updated_at
     </sql>
     
     <select id="selectById" resultMap="WithRelationsResultMap">
@@ -115,25 +119,25 @@
     
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO plan_community (
-            plan_id, community_id, release_date_begin, release_date_end, 
-            barrier_required_qty, frame_required_qty
+            plan_id, community_id, release_date_begin, release_date_end,
+            barrier_required_qty, frame_required_qty, release_status
         ) VALUES (
-            #{planId}, #{communityId}, #{releaseDateBegin}, #{releaseDateEnd}, 
-            #{barrierRequiredQty}, #{frameRequiredQty}
+            #{planId}, #{communityId}, #{releaseDateBegin}, #{releaseDateEnd},
+            #{barrierRequiredQty}, #{frameRequiredQty}, #{releaseStatus}
         )
     </insert>
-    
+
     <insert id="batchInsert">
         INSERT INTO plan_community (
-            plan_id, community_id, release_date_begin, release_date_end, 
-            barrier_required_qty, frame_required_qty
+            plan_id, community_id, release_date_begin, release_date_end,
+            barrier_required_qty, frame_required_qty, release_status
         ) VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.planId}, #{item.communityId}, #{item.releaseDateBegin}, #{item.releaseDateEnd}, 
-             #{item.barrierRequiredQty}, #{item.frameRequiredQty})
+            (#{item.planId}, #{item.communityId}, #{item.releaseDateBegin}, #{item.releaseDateEnd},
+             #{item.barrierRequiredQty}, #{item.frameRequiredQty}, #{item.releaseStatus})
         </foreach>
     </insert>
-    
+
     <update id="update">
         UPDATE plan_community
         <set>
@@ -142,7 +146,8 @@
             <if test="releaseDateBegin != null">release_date_begin = #{releaseDateBegin},</if>
             <if test="releaseDateEnd != null">release_date_end = #{releaseDateEnd},</if>
             <if test="barrierRequiredQty != null">barrier_required_qty = #{barrierRequiredQty},</if>
-            <if test="frameRequiredQty != null">frame_required_qty = #{frameRequiredQty}</if>
+            <if test="frameRequiredQty != null">frame_required_qty = #{frameRequiredQty},</if>
+            <if test="releaseStatus != null">release_status = #{releaseStatus}</if>
         </set>
         WHERE id = #{id}
     </update>

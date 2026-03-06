@@ -165,4 +165,26 @@ public class CommunityController {
         List<Community> list = communityService.getByCity(city);
         return Result.success(list);
     }
+
+    /**
+     * 根据查询参数查询社区列表（不分页）
+     * @param param 查询参数
+     * @return 社区列表
+     */
+    @PostMapping("/filter")
+    public Result<List<Community>> getListByParam(@RequestBody com.touhuwai.dto.param.CommunityQueryParam param) {
+        List<Community> list = communityService.getListByParam(param);
+        return Result.success(list);
+    }
+
+    /**
+     * 根据查询参数分页查询社区列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    @PostMapping("/filter/page")
+    public Result<PageResult<Community>> getPageByParam(@RequestBody com.touhuwai.dto.param.CommunityQueryParam param) {
+        PageResult<Community> pageResult = communityService.getPageByParam(param);
+        return Result.success(pageResult);
+    }
 }

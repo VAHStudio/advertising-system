@@ -47,6 +47,20 @@ public interface CommunityMapper {
     Long count(Community community);
     
     /**
+     * 根据查询参数查询社区列表
+     * @param param 查询参数
+     * @return 社区列表
+     */
+    List<Community> selectListByParam(com.touhuwai.dto.param.CommunityQueryParam param);
+    
+    /**
+     * 根据查询参数统计数量
+     * @param param 查询参数
+     * @return 数量
+     */
+    Long countByParam(com.touhuwai.dto.param.CommunityQueryParam param);
+    
+    /**
      * 新增社区
      * @param community 社区信息
      * @return 影响行数

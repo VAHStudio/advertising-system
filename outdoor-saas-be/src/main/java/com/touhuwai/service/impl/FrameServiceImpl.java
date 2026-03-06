@@ -112,4 +112,23 @@ public class FrameServiceImpl implements FrameService {
     public int batchDelete(List<Integer> ids) {
         return frameMapper.batchDelete(ids);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Frame> getListByParam(com.touhuwai.dto.param.FrameQueryParam param) {
+        return frameMapper.selectListByParam(param);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<Frame> getPageByParam(com.touhuwai.dto.param.FrameQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<Frame> list = frameMapper.selectListByParam(param);
+        PageInfo<Frame> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
+    }
 }

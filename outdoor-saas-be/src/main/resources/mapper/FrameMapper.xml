@@ -10,8 +10,10 @@
         <result column="unit" property="unit"/>
         <result column="elevator" property="elevator"/>
         <result column="inner_position" property="innerPosition"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
-    
+
     <resultMap id="WithCommunityResultMap" type="com.touhuwai.entity.Frame" extends="BaseResultMap">
         <association property="community" javaType="com.touhuwai.entity.Community">
             <id column="community_id" property="id"/>
@@ -21,9 +23,9 @@
             <result column="city" property="city"/>
         </association>
     </resultMap>
-    
+
     <sql id="Base_Column_List">
-        f.id, f.frame_no, f.community_id, f.building, f.unit, f.elevator, f.inner_position
+        f.id, f.frame_no, f.community_id, f.building, f.unit, f.elevator, f.inner_position, f.created_at, f.updated_at
     </sql>
     
     <select id="selectById" resultMap="WithCommunityResultMap">
@@ -56,23 +58,61 @@
         FROM frame f
         LEFT JOIN community c ON f.community_id = c.id
         <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    f.frame_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.building LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.unit LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.building_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
             <if test="frameNo != null and frameNo != ''">
-                AND f.frame_no LIKE CONCAT('%', #{frameNo}, '%')
+                AND f.frame_no = #{frameNo}
+            </if>
+            <if test="frameNoLike != null and frameNoLike != ''">
+                AND f.frame_no LIKE CONCAT('%', #{frameNoLike}, '%')
             </if>
             <if test="communityId != null">
                 AND f.community_id = #{communityId}
             </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND f.community_id IN
+                <foreach collection="communityIdList" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
             <if test="building != null and building != ''">
                 AND f.building = #{building}
+            </if>
+            <if test="buildingLike != null and buildingLike != ''">
+                AND f.building LIKE CONCAT('%', #{buildingLike}, '%')
             </if>
             <if test="unit != null and unit != ''">
                 AND f.unit = #{unit}
             </if>
+            <if test="unitLike != null and unitLike != ''">
+                AND f.unit LIKE CONCAT('%', #{unitLike}, '%')
+            </if>
             <if test="elevator != null and elevator != ''">
                 AND f.elevator = #{elevator}
             </if>
+            <if test="elevatorLike != null and elevatorLike != ''">
+                AND f.elevator LIKE CONCAT('%', #{elevatorLike}, '%')
+            </if>
             <if test="innerPosition != null">
                 AND f.inner_position = #{innerPosition}
+            </if>
+            <if test="innerPositionList != null and innerPositionList.size() > 0">
+                AND f.inner_position IN
+                <foreach collection="innerPositionList" item="ip" open="(" separator="," close=")">
+                    #{ip}
+                </foreach>
+            </if>
+            <if test="city != null and city != ''">
+                AND c.city = #{city}
+            </if>
+            <if test="buildingNameLike != null and buildingNameLike != ''">
+                AND c.building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
             </if>
         </where>
         ORDER BY f.id DESC
@@ -81,24 +121,63 @@
     <select id="count" resultType="java.lang.Long">
         SELECT COUNT(*)
         FROM frame f
+        LEFT JOIN community c ON f.community_id = c.id
         <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    f.frame_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.building LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.unit LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.building_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
             <if test="frameNo != null and frameNo != ''">
-                AND f.frame_no LIKE CONCAT('%', #{frameNo}, '%')
+                AND f.frame_no = #{frameNo}
+            </if>
+            <if test="frameNoLike != null and frameNoLike != ''">
+                AND f.frame_no LIKE CONCAT('%', #{frameNoLike}, '%')
             </if>
             <if test="communityId != null">
                 AND f.community_id = #{communityId}
             </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND f.community_id IN
+                <foreach collection="communityIdList" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
             <if test="building != null and building != ''">
                 AND f.building = #{building}
+            </if>
+            <if test="buildingLike != null and buildingLike != ''">
+                AND f.building LIKE CONCAT('%', #{buildingLike}, '%')
             </if>
             <if test="unit != null and unit != ''">
                 AND f.unit = #{unit}
             </if>
+            <if test="unitLike != null and unitLike != ''">
+                AND f.unit LIKE CONCAT('%', #{unitLike}, '%')
+            </if>
             <if test="elevator != null and elevator != ''">
                 AND f.elevator = #{elevator}
             </if>
+            <if test="elevatorLike != null and elevatorLike != ''">
+                AND f.elevator LIKE CONCAT('%', #{elevatorLike}, '%')
+            </if>
             <if test="innerPosition != null">
                 AND f.inner_position = #{innerPosition}
+            </if>
+            <if test="innerPositionList != null and innerPositionList.size() > 0">
+                AND f.inner_position IN
+                <foreach collection="innerPositionList" item="ip" open="(" separator="," close=")">
+                    #{ip}
+                </foreach>
+            </if>
+            <if test="city != null and city != ''">
+                AND c.city = #{city}
+            </if>
+            <if test="buildingNameLike != null and buildingNameLike != ''">
+                AND c.building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
             </if>
         </where>
     </select>
@@ -157,5 +236,137 @@
     <delete id="deleteByCommunityId">
         DELETE FROM frame WHERE community_id = #{communityId}
     </delete>
-    
+
+    <!-- 根据查询参数查询框架列表 -->
+    <select id="selectListByParam" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM frame f
+        LEFT JOIN community c ON f.community_id = c.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    f.frame_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.building LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.unit LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.building_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="frameNo != null and frameNo != ''">
+                AND f.frame_no = #{frameNo}
+            </if>
+            <if test="frameNoLike != null and frameNoLike != ''">
+                AND f.frame_no LIKE CONCAT('%', #{frameNoLike}, '%')
+            </if>
+            <if test="communityId != null">
+                AND f.community_id = #{communityId}
+            </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND f.community_id IN
+                <foreach collection="communityIdList" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="building != null and building != ''">
+                AND f.building = #{building}
+            </if>
+            <if test="buildingLike != null and buildingLike != ''">
+                AND f.building LIKE CONCAT('%', #{buildingLike}, '%')
+            </if>
+            <if test="unit != null and unit != ''">
+                AND f.unit = #{unit}
+            </if>
+            <if test="unitLike != null and unitLike != ''">
+                AND f.unit LIKE CONCAT('%', #{unitLike}, '%')
+            </if>
+            <if test="elevator != null and elevator != ''">
+                AND f.elevator = #{elevator}
+            </if>
+            <if test="elevatorLike != null and elevatorLike != ''">
+                AND f.elevator LIKE CONCAT('%', #{elevatorLike}, '%')
+            </if>
+            <if test="innerPosition != null">
+                AND f.inner_position = #{innerPosition}
+            </if>
+            <if test="innerPositionList != null and innerPositionList.size() > 0">
+                AND f.inner_position IN
+                <foreach collection="innerPositionList" item="ip" open="(" separator="," close=")">
+                    #{ip}
+                </foreach>
+            </if>
+            <if test="city != null and city != ''">
+                AND c.city = #{city}
+            </if>
+            <if test="buildingNameLike != null and buildingNameLike != ''">
+                AND c.building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
+            </if>
+        </where>
+        ORDER BY f.id DESC
+    </select>
+
+    <!-- 根据查询参数统计数量 -->
+    <select id="countByParam" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM frame f
+        LEFT JOIN community c ON f.community_id = c.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    f.frame_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.building LIKE CONCAT('%', #{keyword}, '%')
+                    OR f.unit LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.building_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="frameNo != null and frameNo != ''">
+                AND f.frame_no = #{frameNo}
+            </if>
+            <if test="frameNoLike != null and frameNoLike != ''">
+                AND f.frame_no LIKE CONCAT('%', #{frameNoLike}, '%')
+            </if>
+            <if test="communityId != null">
+                AND f.community_id = #{communityId}
+            </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND f.community_id IN
+                <foreach collection="communityIdList" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="building != null and building != ''">
+                AND f.building = #{building}
+            </if>
+            <if test="buildingLike != null and buildingLike != ''">
+                AND f.building LIKE CONCAT('%', #{buildingLike}, '%')
+            </if>
+            <if test="unit != null and unit != ''">
+                AND f.unit = #{unit}
+            </if>
+            <if test="unitLike != null and unitLike != ''">
+                AND f.unit LIKE CONCAT('%', #{unitLike}, '%')
+            </if>
+            <if test="elevator != null and elevator != ''">
+                AND f.elevator = #{elevator}
+            </if>
+            <if test="elevatorLike != null and elevatorLike != ''">
+                AND f.elevator LIKE CONCAT('%', #{elevatorLike}, '%')
+            </if>
+            <if test="innerPosition != null">
+                AND f.inner_position = #{innerPosition}
+            </if>
+            <if test="innerPositionList != null and innerPositionList.size() > 0">
+                AND f.inner_position IN
+                <foreach collection="innerPositionList" item="ip" open="(" separator="," close=")">
+                    #{ip}
+                </foreach>
+            </if>
+            <if test="city != null and city != ''">
+                AND c.city = #{city}
+            </if>
+            <if test="buildingNameLike != null and buildingNameLike != ''">
+                AND c.building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
+            </if>
+        </where>
+    </select>
+
 </mapper>

@@ -1,6 +1,7 @@
 package com.touhuwai.entity;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 道闸设备实体类
@@ -25,6 +26,10 @@ public class BarrierGate implements Serializable {
     private Integer screenPosition;
     
     private Integer lightboxDirection;
+    
+    private LocalDateTime createdAt;
+    
+    private LocalDateTime updatedAt;
     
     // 关联对象
     private Community community;
@@ -100,5 +105,21 @@ public class BarrierGate implements Serializable {
 
     public void setCommunity(Community community) {
         this.community = community;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

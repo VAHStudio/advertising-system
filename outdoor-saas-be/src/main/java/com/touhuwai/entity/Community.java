@@ -2,6 +2,7 @@ package com.touhuwai.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 社区信息实体类
@@ -24,6 +25,10 @@ public class Community implements Serializable {
     private BigDecimal coordLng;
     
     private String city;
+    
+    private LocalDateTime createdAt;
+    
+    private LocalDateTime updatedAt;
 
     // Getters and Setters
     public Integer getId() {
@@ -80,5 +85,21 @@ public class Community implements Serializable {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -176,4 +176,26 @@ public class FrameController {
         }
         return Result.error("批量删除失败");
     }
+
+    /**
+     * 根据查询参数查询框架列表（不分页）
+     * @param param 查询参数
+     * @return 框架列表
+     */
+    @PostMapping("/filter")
+    public Result<List<Frame>> getListByParam(@RequestBody com.touhuwai.dto.param.FrameQueryParam param) {
+        List<Frame> list = frameService.getListByParam(param);
+        return Result.success(list);
+    }
+
+    /**
+     * 根据查询参数分页查询框架列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    @PostMapping("/filter/page")
+    public Result<PageResult<Frame>> getPageByParam(@RequestBody com.touhuwai.dto.param.FrameQueryParam param) {
+        PageResult<Frame> pageResult = frameService.getPageByParam(param);
+        return Result.success(pageResult);
+    }
 }

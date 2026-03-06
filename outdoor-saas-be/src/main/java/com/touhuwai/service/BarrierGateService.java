@@ -80,4 +80,18 @@ public interface BarrierGateService {
      * @return 影响的行数
      */
     int batchDelete(List<Integer> ids);
+
+    /**
+     * 根据查询参数查询道闸列表（不分页）
+     * @param param 查询参数
+     * @return 道闸列表
+     */
+    List<BarrierGate> getListByParam(com.touhuwai.dto.param.BarrierGateQueryParam param);
+
+    /**
+     * 根据查询参数分页查询道闸列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<BarrierGate> getPageByParam(com.touhuwai.dto.param.BarrierGateQueryParam param);
 }

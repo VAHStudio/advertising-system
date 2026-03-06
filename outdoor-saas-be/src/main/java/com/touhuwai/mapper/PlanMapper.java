@@ -94,4 +94,18 @@ public interface PlanMapper {
      * @return 影响行数
      */
     int batchDelete(@Param("ids") List<Integer> ids);
+
+    /**
+     * 根据查询参数查询方案列表
+     * @param param 查询参数
+     * @return 方案列表
+     */
+    List<Plan> selectListByParam(com.touhuwai.dto.param.PlanQueryParam param);
+
+    /**
+     * 根据查询参数统计数量
+     * @param param 查询参数
+     * @return 数量
+     */
+    Long countByParam(com.touhuwai.dto.param.PlanQueryParam param);
 }

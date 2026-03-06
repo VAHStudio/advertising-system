@@ -168,4 +168,26 @@ public class BarrierGateController {
         }
         return Result.error("批量删除失败");
     }
+
+    /**
+     * 根据查询参数查询道闸列表（不分页）
+     * @param param 查询参数
+     * @return 道闸列表
+     */
+    @PostMapping("/filter")
+    public Result<List<BarrierGate>> getListByParam(@RequestBody com.touhuwai.dto.param.BarrierGateQueryParam param) {
+        List<BarrierGate> list = barrierGateService.getListByParam(param);
+        return Result.success(list);
+    }
+
+    /**
+     * 根据查询参数分页查询道闸列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    @PostMapping("/filter/page")
+    public Result<PageResult<BarrierGate>> getPageByParam(@RequestBody com.touhuwai.dto.param.BarrierGateQueryParam param) {
+        PageResult<BarrierGate> pageResult = barrierGateService.getPageByParam(param);
+        return Result.success(pageResult);
+    }
 }

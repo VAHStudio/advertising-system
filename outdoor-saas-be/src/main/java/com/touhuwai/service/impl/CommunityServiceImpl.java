@@ -112,4 +112,23 @@ public class CommunityServiceImpl implements CommunityService {
     public List<Community> getByCity(String city) {
         return communityMapper.selectByCity(city);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Community> getListByParam(com.touhuwai.dto.param.CommunityQueryParam param) {
+        return communityMapper.selectListByParam(param);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<Community> getPageByParam(com.touhuwai.dto.param.CommunityQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<Community> list = communityMapper.selectListByParam(param);
+        PageInfo<Community> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
+    }
 }

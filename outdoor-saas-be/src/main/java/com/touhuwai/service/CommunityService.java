@@ -80,4 +80,18 @@ public interface CommunityService {
      * @return 社区列表
      */
     List<Community> getByCity(String city);
+    
+    /**
+     * 根据查询参数查询社区列表（不分页）
+     * @param param 查询参数
+     * @return 社区列表
+     */
+    List<Community> getListByParam(com.touhuwai.dto.param.CommunityQueryParam param);
+    
+    /**
+     * 根据查询参数分页查询社区列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<Community> getPageByParam(com.touhuwai.dto.param.CommunityQueryParam param);
 }

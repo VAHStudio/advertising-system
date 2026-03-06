@@ -1,29 +1,34 @@
 package com.touhuwai.entity;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 框架媒体实体类
  * 对应数据库表：frame
  */
 public class Frame implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     private Integer id;
-    
+
     private String frameNo;
-    
+
     private Integer communityId;
-    
+
     private String building;
-    
+
     private String unit;
-    
+
     private String elevator;
-    
+
     private Integer innerPosition;
-    
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     // 关联对象
     private Community community;
 
@@ -90,5 +95,21 @@ public class Frame implements Serializable {
 
     public void setCommunity(Community community) {
         this.community = community;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -176,4 +176,26 @@ public class PlanController {
         }
         return Result.error("批量删除失败");
     }
+
+    /**
+     * 根据查询参数查询方案列表（不分页）
+     * @param param 查询参数
+     * @return 方案列表
+     */
+    @PostMapping("/filter")
+    public Result<List<Plan>> getListByParam(@RequestBody com.touhuwai.dto.param.PlanQueryParam param) {
+        List<Plan> list = planService.getListByParam(param);
+        return Result.success(list);
+    }
+
+    /**
+     * 根据查询参数分页查询方案列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    @PostMapping("/filter/page")
+    public Result<PageResult<Plan>> getPageByParam(@RequestBody com.touhuwai.dto.param.PlanQueryParam param) {
+        PageResult<Plan> pageResult = planService.getPageByParam(param);
+        return Result.success(pageResult);
+    }
 }

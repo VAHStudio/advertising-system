@@ -10,6 +10,8 @@
         <result column="release_date_begin" property="releaseDateBegin"/>
         <result column="release_date_end" property="releaseDateEnd"/>
         <result column="release_status" property="releaseStatus"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
     
     <resultMap id="WithRelationsResultMap" type="com.touhuwai.entity.PlanBarrier" extends="BaseResultMap">
@@ -31,8 +33,9 @@
     </resultMap>
     
     <sql id="Base_Column_List">
-        pb.id, pb.plan_id, pb.barrier_gate_id, pb.plan_community_id, 
-        pb.release_date_begin, pb.release_date_end, pb.release_status
+        pb.id, pb.plan_id, pb.barrier_gate_id, pb.plan_community_id,
+        pb.release_date_begin, pb.release_date_end, pb.release_status,
+        pb.created_at, pb.updated_at
     </sql>
     
     <select id="selectById" resultMap="WithRelationsResultMap">

@@ -209,4 +209,26 @@ public class PlanServiceImpl implements PlanService {
     public int batchDelete(List<Integer> ids) {
         return planMapper.batchDelete(ids);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Plan> getListByParam(com.touhuwai.dto.param.PlanQueryParam param) {
+        List<Plan> list = planMapper.selectListByParam(param);
+        fillMediaInfoList(list);
+        return list;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<Plan> getPageByParam(com.touhuwai.dto.param.PlanQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<Plan> list = planMapper.selectListByParam(param);
+        fillMediaInfoList(list);
+        PageInfo<Plan> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
+    }
 }

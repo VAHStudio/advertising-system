@@ -80,4 +80,18 @@ public interface FrameService {
      * @return 影响的行数
      */
     int batchDelete(List<Integer> ids);
+
+    /**
+     * 根据查询参数查询框架列表（不分页）
+     * @param param 查询参数
+     * @return 框架列表
+     */
+    List<Frame> getListByParam(com.touhuwai.dto.param.FrameQueryParam param);
+
+    /**
+     * 根据查询参数分页查询框架列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<Frame> getPageByParam(com.touhuwai.dto.param.FrameQueryParam param);
 }

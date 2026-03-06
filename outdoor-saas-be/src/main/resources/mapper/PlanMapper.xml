@@ -12,13 +12,19 @@
         <result column="release_status" property="releaseStatus"/>
         <result column="sales_type" property="salesType"/>
         <result column="media_requirements" property="mediaRequirements"/>
+        <result column="media_type" property="mediaType"/>
+        <result column="sales_person" property="salesPerson"/>
+        <result column="sample_image" property="sampleImage"/>
+        <result column="budget" property="budget"/>
+        <result column="estimated_reach" property="estimatedReach"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, plan_no, plan_name, customer, release_date_begin, release_date_end,
-        release_status, sales_type, media_requirements, created_at, updated_at
+        release_status, sales_type, media_requirements, media_type, sales_person,
+        sample_image, budget, estimated_reach, created_at, updated_at
     </sql>
     
     <select id="selectById" resultMap="BaseResultMap">
@@ -112,25 +118,29 @@
     
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO plan (
-            plan_no, plan_name, customer, release_date_begin, release_date_end, 
-            release_status, sales_type, media_requirements
+            plan_no, plan_name, customer, release_date_begin, release_date_end,
+            release_status, sales_type, media_requirements, media_type, sales_person,
+            sample_image, budget, estimated_reach
         ) VALUES (
-            #{planNo}, #{planName}, #{customer}, #{releaseDateBegin}, #{releaseDateEnd}, 
-            #{releaseStatus}, #{salesType}, #{mediaRequirements}
+            #{planNo}, #{planName}, #{customer}, #{releaseDateBegin}, #{releaseDateEnd},
+            #{releaseStatus}, #{salesType}, #{mediaRequirements}, #{mediaType}, #{salesPerson},
+            #{sampleImage}, #{budget}, #{estimatedReach}
         )
     </insert>
-    
+
     <insert id="batchInsert">
         INSERT INTO plan (
-            plan_no, plan_name, customer, release_date_begin, release_date_end, 
-            release_status, sales_type, media_requirements
+            plan_no, plan_name, customer, release_date_begin, release_date_end,
+            release_status, sales_type, media_requirements, media_type, sales_person,
+            sample_image, budget, estimated_reach
         ) VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.planNo}, #{item.planName}, #{item.customer}, #{item.releaseDateBegin}, 
-             #{item.releaseDateEnd}, #{item.releaseStatus}, #{item.salesType}, #{item.mediaRequirements})
+            (#{item.planNo}, #{item.planName}, #{item.customer}, #{item.releaseDateBegin},
+             #{item.releaseDateEnd}, #{item.releaseStatus}, #{item.salesType}, #{item.mediaRequirements},
+             #{item.mediaType}, #{item.salesPerson}, #{item.sampleImage}, #{item.budget}, #{item.estimatedReach})
         </foreach>
     </insert>
-    
+
     <update id="update">
         UPDATE plan
         <set>
@@ -141,7 +151,12 @@
             <if test="releaseDateEnd != null">release_date_end = #{releaseDateEnd},</if>
             <if test="releaseStatus != null">release_status = #{releaseStatus},</if>
             <if test="salesType != null">sales_type = #{salesType},</if>
-            <if test="mediaRequirements != null">media_requirements = #{mediaRequirements}</if>
+            <if test="mediaRequirements != null">media_requirements = #{mediaRequirements},</if>
+            <if test="mediaType != null">media_type = #{mediaType},</if>
+            <if test="salesPerson != null">sales_person = #{salesPerson},</if>
+            <if test="sampleImage != null">sample_image = #{sampleImage},</if>
+            <if test="budget != null">budget = #{budget},</if>
+            <if test="estimatedReach != null">estimated_reach = #{estimatedReach}</if>
         </set>
         WHERE id = #{id}
     </update>
@@ -156,5 +171,212 @@
             #{id}
         </foreach>
     </delete>
-    
+
+    <!-- 根据查询参数查询方案列表 -->
+    <select id="selectListByParam" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM plan
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    plan_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR plan_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR customer LIKE CONCAT('%', #{keyword}, '%')
+                    OR sales_person LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="planNo != null and planNo != ''">
+                AND plan_no = #{planNo}
+            </if>
+            <if test="planNoLike != null and planNoLike != ''">
+                AND plan_no LIKE CONCAT('%', #{planNoLike}, '%')
+            </if>
+            <if test="planName != null and planName != ''">
+                AND plan_name = #{planName}
+            </if>
+            <if test="planNameLike != null and planNameLike != ''">
+                AND plan_name LIKE CONCAT('%', #{planNameLike}, '%')
+            </if>
+            <if test="customer != null and customer != ''">
+                AND customer = #{customer}
+            </if>
+            <if test="customerLike != null and customerLike != ''">
+                AND customer LIKE CONCAT('%', #{customerLike}, '%')
+            </if>
+            <if test="releaseStatus != null">
+                AND release_status = #{releaseStatus}
+            </if>
+            <if test="releaseStatusList != null and releaseStatusList.size() > 0">
+                AND release_status IN
+                <foreach collection="releaseStatusList" item="rs" open="(" separator="," close=")">
+                    #{rs}
+                </foreach>
+            </if>
+            <if test="salesType != null">
+                AND sales_type = #{salesType}
+            </if>
+            <if test="salesTypeList != null and salesTypeList.size() > 0">
+                AND sales_type IN
+                <foreach collection="salesTypeList" item="st" open="(" separator="," close=")">
+                    #{st}
+                </foreach>
+            </if>
+            <if test="mediaType != null">
+                AND media_type = #{mediaType}
+            </if>
+            <if test="mediaTypeList != null and mediaTypeList.size() > 0">
+                AND media_type IN
+                <foreach collection="mediaTypeList" item="mt" open="(" separator="," close=")">
+                    #{mt}
+                </foreach>
+            </if>
+            <if test="releaseDateBeginFrom != null">
+                AND release_date_begin &gt;= #{releaseDateBeginFrom}
+            </if>
+            <if test="releaseDateBeginTo != null">
+                AND release_date_begin &lt;= #{releaseDateBeginTo}
+            </if>
+            <if test="releaseDateEndFrom != null">
+                AND release_date_end &gt;= #{releaseDateEndFrom}
+            </if>
+            <if test="releaseDateEndTo != null">
+                AND release_date_end &lt;= #{releaseDateEndTo}
+            </if>
+            <if test="salesPerson != null and salesPerson != ''">
+                AND sales_person = #{salesPerson}
+            </if>
+            <if test="salesPersonLike != null and salesPersonLike != ''">
+                AND sales_person LIKE CONCAT('%', #{salesPersonLike}, '%')
+            </if>
+            <if test="budgetMin != null">
+                AND budget &gt;= #{budgetMin}
+            </if>
+            <if test="budgetMax != null">
+                AND budget &lt;= #{budgetMax}
+            </if>
+            <if test="estimatedReachMin != null">
+                AND estimated_reach &gt;= #{estimatedReachMin}
+            </if>
+            <if test="estimatedReachMax != null">
+                AND estimated_reach &lt;= #{estimatedReachMax}
+            </if>
+            <if test="createdAtBegin != null">
+                AND created_at &gt;= #{createdAtBegin}
+            </if>
+            <if test="createdAtEnd != null">
+                AND created_at &lt;= #{createdAtEnd}
+            </if>
+            <if test="updatedAtBegin != null">
+                AND updated_at &gt;= #{updatedAtBegin}
+            </if>
+            <if test="updatedAtEnd != null">
+                AND updated_at &lt;= #{updatedAtEnd}
+            </if>
+        </where>
+        ORDER BY updated_at DESC
+    </select>
+
+    <!-- 根据查询参数统计数量 -->
+    <select id="countByParam" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM plan
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    plan_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR plan_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR customer LIKE CONCAT('%', #{keyword}, '%')
+                    OR sales_person LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="planNo != null and planNo != ''">
+                AND plan_no = #{planNo}
+            </if>
+            <if test="planNoLike != null and planNoLike != ''">
+                AND plan_no LIKE CONCAT('%', #{planNoLike}, '%')
+            </if>
+            <if test="planName != null and planName != ''">
+                AND plan_name = #{planName}
+            </if>
+            <if test="planNameLike != null and planNameLike != ''">
+                AND plan_name LIKE CONCAT('%', #{planNameLike}, '%')
+            </if>
+            <if test="customer != null and customer != ''">
+                AND customer = #{customer}
+            </if>
+            <if test="customerLike != null and customerLike != ''">
+                AND customer LIKE CONCAT('%', #{customerLike}, '%')
+            </if>
+            <if test="releaseStatus != null">
+                AND release_status = #{releaseStatus}
+            </if>
+            <if test="releaseStatusList != null and releaseStatusList.size() > 0">
+                AND release_status IN
+                <foreach collection="releaseStatusList" item="rs" open="(" separator="," close=")">
+                    #{rs}
+                </foreach>
+            </if>
+            <if test="salesType != null">
+                AND sales_type = #{salesType}
+            </if>
+            <if test="salesTypeList != null and salesTypeList.size() > 0">
+                AND sales_type IN
+                <foreach collection="salesTypeList" item="st" open="(" separator="," close=")">
+                    #{st}
+                </foreach>
+            </if>
+            <if test="mediaType != null">
+                AND media_type = #{mediaType}
+            </if>
+            <if test="mediaTypeList != null and mediaTypeList.size() > 0">
+                AND media_type IN
+                <foreach collection="mediaTypeList" item="mt" open="(" separator="," close=")">
+                    #{mt}
+                </foreach>
+            </if>
+            <if test="releaseDateBeginFrom != null">
+                AND release_date_begin &gt;= #{releaseDateBeginFrom}
+            </if>
+            <if test="releaseDateBeginTo != null">
+                AND release_date_begin &lt;= #{releaseDateBeginTo}
+            </if>
+            <if test="releaseDateEndFrom != null">
+                AND release_date_end &gt;= #{releaseDateEndFrom}
+            </if>
+            <if test="releaseDateEndTo != null">
+                AND release_date_end &lt;= #{releaseDateEndTo}
+            </if>
+            <if test="salesPerson != null and salesPerson != ''">
+                AND sales_person = #{salesPerson}
+            </if>
+            <if test="salesPersonLike != null and salesPersonLike != ''">
+                AND sales_person LIKE CONCAT('%', #{salesPersonLike}, '%')
+            </if>
+            <if test="budgetMin != null">
+                AND budget &gt;= #{budgetMin}
+            </if>
+            <if test="budgetMax != null">
+                AND budget &lt;= #{budgetMax}
+            </if>
+            <if test="estimatedReachMin != null">
+                AND estimated_reach &gt;= #{estimatedReachMin}
+            </if>
+            <if test="estimatedReachMax != null">
+                AND estimated_reach &lt;= #{estimatedReachMax}
+            </if>
+            <if test="createdAtBegin != null">
+                AND created_at &gt;= #{createdAtBegin}
+            </if>
+            <if test="createdAtEnd != null">
+                AND created_at &lt;= #{createdAtEnd}
+            </if>
+            <if test="updatedAtBegin != null">
+                AND updated_at &gt;= #{updatedAtBegin}
+            </if>
+            <if test="updatedAtEnd != null">
+                AND updated_at &lt;= #{updatedAtEnd}
+            </if>
+        </where>
+    </select>
+
 </mapper>

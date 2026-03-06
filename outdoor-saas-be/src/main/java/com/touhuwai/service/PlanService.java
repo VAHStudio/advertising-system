@@ -87,4 +87,18 @@ public interface PlanService {
      * @return 影响的行数
      */
     int batchDelete(List<Integer> ids);
+
+    /**
+     * 根据查询参数查询方案列表（不分页）
+     * @param param 查询参数
+     * @return 方案列表
+     */
+    List<Plan> getListByParam(com.touhuwai.dto.param.PlanQueryParam param);
+
+    /**
+     * 根据查询参数分页查询方案列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<Plan> getPageByParam(com.touhuwai.dto.param.PlanQueryParam param);
 }
