@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 社区信息查询参数
@@ -53,7 +54,7 @@ public class CommunityQueryParam extends BaseQueryParam implements Serializable 
     /**
      * 城市列表（IN查询）
      */
-    private String cityList;
+    private List<String> cityList;
 
     /**
      * 纬度最小值

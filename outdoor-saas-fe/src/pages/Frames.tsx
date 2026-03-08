@@ -1,62 +1,25 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { frameService } from '../services/frameService';
 import type { Frame } from '../services/frameService';
-import type { PageResult } from '../types/query';
+import type { FrameQueryParam } from '../types/query';
 import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
 
 export default function Frames() {
   const navigate = useNavigate();
-  const [frames, setFrames] = useState<Frame[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
-  // 分页状态
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    loadFrames();
-  }, [currentPage, pageSize]);
-
-  const loadFrames = async () => {
-    try {
-      setLoading(true);
-      // 使用分页查询代替全量查询
-      const result = await frameService.filterPage({
-        pageNum: currentPage,
-        pageSize: pageSize
-      });
-      
-      // 处理返回结果
-      if (Array.isArray(result)) {
-        // 如果返回的是数组（旧接口），直接使用
-        setFrames(result);
-        setTotal(result.length);
-      } else {
-        // 如果返回的是 PageResult 对象
-        const pageResult = result as PageResult<Frame>;
-        setFrames(pageResult.list || []);
-        setTotal(pageResult.total || 0);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 处理页码变化
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // 处理每页条数变化
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1); // 重置到第一页
-  };
+  const {
+    data: frames,
+    loading,
+    error,
+    currentPage,
+    pageSize,
+    total,
+    setPage,
+    setPageSize,
+  } = usePagination<Frame, FrameQueryParam>({
+    fetchFn: frameService.filterPage,
+    defaultPageSize: 10,
+  });
 
   if (loading) {
     return (
@@ -89,7 +52,6 @@ export default function Frames() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">框架编号</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">社区ID</th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">楼栋</th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">单元</th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">电梯</th>
@@ -98,19 +60,18 @@ export default function Frames() {
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {frames.map((frame) => (
-              <tr 
-                key={frame.id} 
+              <tr
+                key={frame.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                 onClick={() => navigate(`/frames/${frame.id}`)}
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-text-light dark:text-text-dark">{frame.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light dark:text-text-dark">{frame.frameNo}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{frame.communityId}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{frame.building}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{frame.unit}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{frame.elevator}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2" onClick={(e) => e.stopPropagation()}>
-                  <button 
+                  <button
                     className="text-primary hover:text-primary/80 transition-colors"
                     onClick={() => navigate(`/frames/${frame.id}`)}
                   >
@@ -129,8 +90,8 @@ export default function Frames() {
           current={currentPage}
           pageSize={pageSize}
           total={total}
-          onChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
+          onChange={setPage}
+          onPageSizeChange={setPageSize}
         />
       </div>
     </div>

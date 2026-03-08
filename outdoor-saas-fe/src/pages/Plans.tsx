@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { planService, Plan } from '../services/planService';
@@ -64,29 +64,16 @@ export default function Plans() {
     try {
       setLoading(true);
       
-      // 使用分页查询代替全量查询
-      const result = await planService.filterPage({
+      // 使用分页查询
+      const pageResult = await planService.filterPage({
         pageNum: currentPage,
         pageSize: pageSize
       });
       
-      let plansData: Plan[] = [];
-      let totalCount = 0;
-      
-      // 处理返回结果
-      if (Array.isArray(result)) {
-        plansData = result as Plan[];
-        totalCount = result.length;
-      } else {
-        const pageResult = result as { list: Plan[]; total: number };
-        plansData = pageResult.list || [];
-        totalCount = pageResult.total || 0;
-      }
-      
-      setTotal(totalCount);
+      setTotal(pageResult.total || 0);
       
       // Transform API data to display format
-      const displayPlans: DisplayPlan[] = plansData.map(plan => ({
+      const displayPlans: DisplayPlan[] = (pageResult.list || []).map(plan => ({
         id: plan.planNo,
         title: plan.planName,
         customer: plan.customer,

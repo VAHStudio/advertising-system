@@ -17,6 +17,68 @@
     <sql id="Base_Column_List">
         id, community_no, building_name, building_address, coord_lat, coord_lng, city, created_at, updated_at
     </sql>
+
+    <!-- 社区查询条件片段 -->
+    <sql id="Community_Where_Condition">
+        <if test="keyword != null and keyword != ''">
+            AND (
+                community_no LIKE CONCAT('%', #{keyword}, '%')
+                OR building_name LIKE CONCAT('%', #{keyword}, '%')
+                OR building_address LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="communityNo != null and communityNo != ''">
+            AND community_no = #{communityNo}
+        </if>
+        <if test="communityNoLike != null and communityNoLike != ''">
+            AND community_no LIKE CONCAT('%', #{communityNoLike}, '%')
+        </if>
+        <if test="buildingName != null and buildingName != ''">
+            AND building_name = #{buildingName}
+        </if>
+        <if test="buildingNameLike != null and buildingNameLike != ''">
+            AND building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
+        </if>
+        <if test="buildingAddress != null and buildingAddress != ''">
+            AND building_address = #{buildingAddress}
+        </if>
+        <if test="buildingAddressLike != null and buildingAddressLike != ''">
+            AND building_address LIKE CONCAT('%', #{buildingAddressLike}, '%')
+        </if>
+        <if test="city != null and city != ''">
+            AND city = #{city}
+        </if>
+        <if test="cityList != null and cityList.size() > 0">
+            AND city IN
+            <foreach collection="cityList" item="cityItem" open="(" separator="," close=")">
+                #{cityItem}
+            </foreach>
+        </if>
+        <if test="coordLatMin != null">
+            AND coord_lat &gt;= #{coordLatMin}
+        </if>
+        <if test="coordLatMax != null">
+            AND coord_lat &lt;= #{coordLatMax}
+        </if>
+        <if test="coordLngMin != null">
+            AND coord_lng &gt;= #{coordLngMin}
+        </if>
+        <if test="coordLngMax != null">
+            AND coord_lng &lt;= #{coordLngMax}
+        </if>
+        <if test="createdAtBegin != null">
+            AND created_at &gt;= #{createdAtBegin}
+        </if>
+        <if test="createdAtEnd != null">
+            AND created_at &lt;= #{createdAtEnd}
+        </if>
+        <if test="updatedAtBegin != null">
+            AND updated_at &gt;= #{updatedAtBegin}
+        </if>
+        <if test="updatedAtEnd != null">
+            AND updated_at &lt;= #{updatedAtEnd}
+        </if>
+    </sql>
     
     <select id="selectById" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
@@ -68,9 +130,9 @@
             <if test="city != null and city != ''">
                 AND city = #{city}
             </if>
-            <if test="cityList != null and cityList != ''">
+            <if test="cityList != null and cityList.size() > 0">
                 AND city IN
-                <foreach collection="cityList.split(',')" item="cityItem" open="(" separator="," close=")">
+                <foreach collection="cityList" item="cityItem" open="(" separator="," close=")">
                     #{cityItem}
                 </foreach>
             </if>
@@ -134,9 +196,9 @@
             <if test="city != null and city != ''">
                 AND city = #{city}
             </if>
-            <if test="cityList != null and cityList != ''">
+            <if test="cityList != null and cityList.size() > 0">
                 AND city IN
-                <foreach collection="cityList.split(',')" item="cityItem" open="(" separator="," close=")">
+                <foreach collection="cityList" item="cityItem" open="(" separator="," close=")">
                     #{cityItem}
                 </foreach>
             </if>
@@ -221,64 +283,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM community
         <where>
-            <if test="keyword != null and keyword != ''">
-                AND (
-                    community_no LIKE CONCAT('%', #{keyword}, '%')
-                    OR building_name LIKE CONCAT('%', #{keyword}, '%')
-                    OR building_address LIKE CONCAT('%', #{keyword}, '%')
-                )
-            </if>
-            <if test="communityNo != null and communityNo != ''">
-                AND community_no = #{communityNo}
-            </if>
-            <if test="communityNoLike != null and communityNoLike != ''">
-                AND community_no LIKE CONCAT('%', #{communityNoLike}, '%')
-            </if>
-            <if test="buildingName != null and buildingName != ''">
-                AND building_name = #{buildingName}
-            </if>
-            <if test="buildingNameLike != null and buildingNameLike != ''">
-                AND building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
-            </if>
-            <if test="buildingAddress != null and buildingAddress != ''">
-                AND building_address = #{buildingAddress}
-            </if>
-            <if test="buildingAddressLike != null and buildingAddressLike != ''">
-                AND building_address LIKE CONCAT('%', #{buildingAddressLike}, '%')
-            </if>
-            <if test="city != null and city != ''">
-                AND city = #{city}
-            </if>
-            <if test="cityList != null and cityList != ''">
-                AND city IN
-                <foreach collection="cityList.split(',')" item="cityItem" open="(" separator="," close=")">
-                    #{cityItem}
-                </foreach>
-            </if>
-            <if test="coordLatMin != null">
-                AND coord_lat &gt;= #{coordLatMin}
-            </if>
-            <if test="coordLatMax != null">
-                AND coord_lat &lt;= #{coordLatMax}
-            </if>
-            <if test="coordLngMin != null">
-                AND coord_lng &gt;= #{coordLngMin}
-            </if>
-            <if test="coordLngMax != null">
-                AND coord_lng &lt;= #{coordLngMax}
-            </if>
-            <if test="createdAtBegin != null">
-                AND created_at &gt;= #{createdAtBegin}
-            </if>
-            <if test="createdAtEnd != null">
-                AND created_at &lt;= #{createdAtEnd}
-            </if>
-            <if test="updatedAtBegin != null">
-                AND updated_at &gt;= #{updatedAtBegin}
-            </if>
-            <if test="updatedAtEnd != null">
-                AND updated_at &lt;= #{updatedAtEnd}
-            </if>
+            <include refid="Community_Where_Condition"/>
         </where>
         ORDER BY id DESC
     </select>
@@ -288,64 +293,7 @@
         SELECT COUNT(*)
         FROM community
         <where>
-            <if test="keyword != null and keyword != ''">
-                AND (
-                    community_no LIKE CONCAT('%', #{keyword}, '%')
-                    OR building_name LIKE CONCAT('%', #{keyword}, '%')
-                    OR building_address LIKE CONCAT('%', #{keyword}, '%')
-                )
-            </if>
-            <if test="communityNo != null and communityNo != ''">
-                AND community_no = #{communityNo}
-            </if>
-            <if test="communityNoLike != null and communityNoLike != ''">
-                AND community_no LIKE CONCAT('%', #{communityNoLike}, '%')
-            </if>
-            <if test="buildingName != null and buildingName != ''">
-                AND building_name = #{buildingName}
-            </if>
-            <if test="buildingNameLike != null and buildingNameLike != ''">
-                AND building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
-            </if>
-            <if test="buildingAddress != null and buildingAddress != ''">
-                AND building_address = #{buildingAddress}
-            </if>
-            <if test="buildingAddressLike != null and buildingAddressLike != ''">
-                AND building_address LIKE CONCAT('%', #{buildingAddressLike}, '%')
-            </if>
-            <if test="city != null and city != ''">
-                AND city = #{city}
-            </if>
-            <if test="cityList != null and cityList != ''">
-                AND city IN
-                <foreach collection="cityList.split(',')" item="cityItem" open="(" separator="," close=")">
-                    #{cityItem}
-                </foreach>
-            </if>
-            <if test="coordLatMin != null">
-                AND coord_lat &gt;= #{coordLatMin}
-            </if>
-            <if test="coordLatMax != null">
-                AND coord_lat &lt;= #{coordLatMax}
-            </if>
-            <if test="coordLngMin != null">
-                AND coord_lng &gt;= #{coordLngMin}
-            </if>
-            <if test="coordLngMax != null">
-                AND coord_lng &lt;= #{coordLngMax}
-            </if>
-            <if test="createdAtBegin != null">
-                AND created_at &gt;= #{createdAtBegin}
-            </if>
-            <if test="createdAtEnd != null">
-                AND created_at &lt;= #{createdAtEnd}
-            </if>
-            <if test="updatedAtBegin != null">
-                AND updated_at &gt;= #{updatedAtBegin}
-            </if>
-            <if test="updatedAtEnd != null">
-                AND updated_at &lt;= #{updatedAtEnd}
-            </if>
+            <include refid="Community_Where_Condition"/>
         </where>
     </select>
 

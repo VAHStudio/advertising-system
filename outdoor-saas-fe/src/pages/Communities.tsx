@@ -1,62 +1,25 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { communityService } from '../services/communityService';
 import type { Community } from '../services/communityService';
-import type { PageResult } from '../types/query';
+import type { CommunityQueryParam } from '../types/query';
 import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
 
 export default function Communities() {
   const navigate = useNavigate();
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
-  // 分页状态
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    loadCommunities();
-  }, [currentPage, pageSize]);
-
-  const loadCommunities = async () => {
-    try {
-      setLoading(true);
-      // 使用分页查询代替全量查询
-      const result = await communityService.filterPage({
-        pageNum: currentPage,
-        pageSize: pageSize
-      });
-      
-      // 处理返回结果
-      if (Array.isArray(result)) {
-        // 如果返回的是数组（旧接口），直接使用
-        setCommunities(result);
-        setTotal(result.length);
-      } else {
-        // 如果返回的是 PageResult 对象
-        const pageResult = result as PageResult<Community>;
-        setCommunities(pageResult.list || []);
-        setTotal(pageResult.total || 0);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 处理页码变化
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // 处理每页条数变化
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1); // 重置到第一页
-  };
+  const {
+    data: communities,
+    loading,
+    error,
+    currentPage,
+    pageSize,
+    total,
+    setPage,
+    setPageSize,
+  } = usePagination<Community, CommunityQueryParam>({
+    fetchFn: communityService.filterPage,
+    defaultPageSize: 10,
+  });
 
   if (loading) {
     return (
@@ -97,8 +60,8 @@ export default function Communities() {
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {communities.map((community) => (
-              <tr 
-                key={community.id} 
+              <tr
+                key={community.id}
                 className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                 onClick={() => navigate(`/communities/${community.id}`)}
               >
@@ -108,7 +71,7 @@ export default function Communities() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{community.buildingAddress}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{community.city}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2" onClick={(e) => e.stopPropagation()}>
-                  <button 
+                  <button
                     className="text-primary hover:text-primary/80 transition-colors"
                     onClick={() => navigate(`/communities/${community.id}`)}
                   >
@@ -127,8 +90,8 @@ export default function Communities() {
           current={currentPage}
           pageSize={pageSize}
           total={total}
-          onChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
+          onChange={setPage}
+          onPageSizeChange={setPageSize}
         />
       </div>
     </div>
