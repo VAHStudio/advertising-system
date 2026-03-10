@@ -57,12 +57,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * 从请求中获取 JWT Token
+     * 支持 Header (Bearer token) 和 Query Parameter (token=xxx) 两种方式
+     * Query Parameter 方式用于 SSE 流式接口
      */
     private String getJwtFromRequest(HttpServletRequest request) {
+        // 1. 尝试从 Header 获取
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
+        
+        // 2. 尝试从 Query Parameter 获取（用于 SSE EventSource）
+        String tokenFromParam = request.getParameter("token");
+        if (StringUtils.hasText(tokenFromParam)) {
+            return tokenFromParam;
+        }
+        
         return null;
     }
 }

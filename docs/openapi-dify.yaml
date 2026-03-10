@@ -1,0 +1,897 @@
+openapi: 3.0.3
+info:
+  title: Outdoor SaaS API
+  version: 1.0.0
+  description: |
+    户外广告管理系统 REST API
+    用于 Dify AI 助手集成
+
+servers:
+  - url: http://121.40.166.153:16000
+    description: 本地开发环境（frp内网穿透）
+
+security:
+  - authorization: [Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0b3VodXdhaSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzczMTE0ODE4LCJleHAiOjE3NzMyMDEyMTh9.e_qpuguVudlfaUY-KF1oHflUusMaEwf1kZN3_spuksxK3PebAI511HGOHBel83fn]
+
+paths:
+  # ========== 社区管理 ==========
+  /api/community/list:
+    get:
+      tags:
+        - 社区管理
+      summary: 查询所有社区
+      description: 获取系统中所有社区列表
+      operationId: list_communities
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListCommunity'
+
+  /api/community/{id}:
+    get:
+      tags:
+        - 社区管理
+      summary: 根据ID查询社区
+      description: 获取指定ID的社区详细信息
+      operationId: get_community
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 社区ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultCommunity'
+        '404':
+          description: 社区不存在
+
+    delete:
+      tags:
+        - 社区管理
+      summary: 删除社区
+      description: 根据ID删除指定社区
+      operationId: delete_community
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 社区ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
+
+  /api/community:
+    post:
+      tags:
+        - 社区管理
+      summary: 创建社区
+      description: 创建新社区
+      operationId: create_community
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Community'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
+
+    put:
+      tags:
+        - 社区管理
+      summary: 更新社区
+      description: 更新社区信息
+      operationId: update_community
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Community'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
+
+  /api/community/filter/page:
+    post:
+      tags:
+        - 社区管理
+      summary: 分页查询社区
+      description: 根据条件分页查询社区列表
+      operationId: filter_communities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunityQueryParam'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultCommunity'
+
+  # ========== 道闸管理 ==========
+  /api/barrier-gate/list:
+    get:
+      tags:
+        - 道闸管理
+      summary: 查询所有道闸
+      description: 获取系统中所有道闸列表
+      operationId: list_barrier_gates
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListBarrierGate'
+
+  /api/barrier-gate/{id}:
+    get:
+      tags:
+        - 道闸管理
+      summary: 根据ID查询道闸
+      description: 获取指定ID的道闸详细信息
+      operationId: get_barrier_gate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 道闸ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultBarrierGate'
+
+    delete:
+      tags:
+        - 道闸管理
+      summary: 删除道闸
+      description: 根据ID删除指定道闸
+      operationId: delete_barrier_gate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 道闸ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /api/barrier-gate:
+    post:
+      tags:
+        - 道闸管理
+      summary: 创建道闸
+      description: 创建新道闸
+      operationId: create_barrier_gate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BarrierGate'
+      responses:
+        '200':
+          description: 创建成功
+
+    put:
+      tags:
+        - 道闸管理
+      summary: 更新道闸
+      description: 更新道闸信息
+      operationId: update_barrier_gate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BarrierGate'
+      responses:
+        '200':
+          description: 更新成功
+
+  /api/barrier-gate/community/{communityId}:
+    get:
+      tags:
+        - 道闸管理
+      summary: 根据社区查询道闸
+      description: 获取指定社区下的所有道闸
+      operationId: get_barrier_gates_by_community
+      parameters:
+        - name: communityId
+          in: path
+          required: true
+          description: 社区ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+
+  # ========== 框架管理 ==========
+  /api/frame/list:
+    get:
+      tags:
+        - 框架管理
+      summary: 查询所有框架
+      description: 获取系统中所有框架列表
+      operationId: list_frames
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListFrame'
+
+  /api/frame/{id}:
+    get:
+      tags:
+        - 框架管理
+      summary: 根据ID查询框架
+      description: 获取指定ID的框架详细信息
+      operationId: get_frame
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 框架ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+
+    delete:
+      tags:
+        - 框架管理
+      summary: 删除框架
+      description: 根据ID删除指定框架
+      operationId: delete_frame
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 框架ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /api/frame:
+    post:
+      tags:
+        - 框架管理
+      summary: 创建框架
+      description: 创建新框架
+      operationId: create_frame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Frame'
+      responses:
+        '200':
+          description: 创建成功
+
+    put:
+      tags:
+        - 框架管理
+      summary: 更新框架
+      description: 更新框架信息
+      operationId: update_frame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Frame'
+      responses:
+        '200':
+          description: 更新成功
+
+  # ========== 方案管理 ==========
+  /api/plan/list:
+    get:
+      tags:
+        - 方案管理
+      summary: 查询所有方案
+      description: 获取系统中所有方案列表
+      operationId: list_plans
+      responses:
+        '200':
+          description: 成功
+
+  /api/plan/{id}:
+    get:
+      tags:
+        - 方案管理
+      summary: 根据ID查询方案
+      description: 获取指定ID的方案详细信息
+      operationId: get_plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 方案ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+
+    delete:
+      tags:
+        - 方案管理
+      summary: 删除方案
+      description: 根据ID删除指定方案
+      operationId: delete_plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 方案ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /api/plan:
+    post:
+      tags:
+        - 方案管理
+      summary: 创建方案
+      description: 创建新方案
+      operationId: create_plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Plan'
+      responses:
+        '200':
+          description: 创建成功
+
+    put:
+      tags:
+        - 方案管理
+      summary: 更新方案
+      description: 更新方案信息
+      operationId: update_plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Plan'
+      responses:
+        '200':
+          description: 更新成功
+
+  # ========== 方案关联管理 ==========
+  /api/plan-community/filter/page:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 查询方案社区关联
+      description: 分页查询方案与社区的关联关系
+      operationId: list_plan_communities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanCommunityQueryParam'
+      responses:
+        '200':
+          description: 成功
+
+  /api/plan-community:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 创建方案社区关联
+      description: 将社区添加到方案
+      operationId: create_plan_community
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanCommunity'
+      responses:
+        '200':
+          description: 创建成功
+
+  /api/plan-community/{id}:
+    delete:
+      tags:
+        - 方案关联管理
+      summary: 删除方案社区关联
+      description: 从方案中移除社区
+      operationId: delete_plan_community
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 关联ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /api/plan-barrier/filter/page:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 查询方案道闸关联
+      description: 分页查询方案与道闸的关联关系
+      operationId: list_plan_barriers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanBarrierQueryParam'
+      responses:
+        '200':
+          description: 成功
+
+  /api/plan-barrier:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 创建方案道闸关联
+      description: 将道闸添加到方案
+      operationId: create_plan_barrier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanBarrier'
+      responses:
+        '200':
+          description: 创建成功
+
+  /api/plan-barrier/{id}:
+    delete:
+      tags:
+        - 方案关联管理
+      summary: 删除方案道闸关联
+      description: 从方案中移除道闸
+      operationId: delete_plan_barrier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 关联ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /api/plan-frame/filter/page:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 查询方案框架关联
+      description: 分页查询方案与框架的关联关系
+      operationId: list_plan_frames
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanFrameQueryParam'
+      responses:
+        '200':
+          description: 成功
+
+  /api/plan-frame:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 创建方案框架关联
+      description: 将框架添加到方案
+      operationId: create_plan_frame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanFrame'
+      responses:
+        '200':
+          description: 创建成功
+
+  /api/plan-frame/{id}:
+    delete:
+      tags:
+        - 方案关联管理
+      summary: 删除方案框架关联
+      description: 从方案中移除框架
+      operationId: delete_plan_frame
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 关联ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 请输入 JWT Token，格式：Bearer {token}
+
+  schemas:
+    # ========== 通用响应 ==========
+    ResultInteger:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: integer
+        timestamp:
+          type: integer
+          format: int64
+
+    # ========== 社区 ==========
+    Community:
+      type: object
+      properties:
+        id:
+          type: integer
+        communityNo:
+          type: string
+          description: 社区编号
+        buildingName:
+          type: string
+          description: 楼栋名称
+        buildingAddress:
+          type: string
+          description: 楼栋地址
+        city:
+          type: string
+          description: 城市
+        district:
+          type: string
+          description: 区县
+        street:
+          type: string
+          description: 街道
+
+    ResultCommunity:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Community'
+        timestamp:
+          type: integer
+          format: int64
+
+    ResultListCommunity:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Community'
+        timestamp:
+          type: integer
+          format: int64
+
+    CommunityQueryParam:
+      type: object
+      properties:
+        keyword:
+          type: string
+          description: 关键词搜索
+        city:
+          type: string
+          description: 城市筛选
+        pageNum:
+          type: integer
+          default: 1
+        pageSize:
+          type: integer
+          default: 10
+
+    # ========== 道闸 ==========
+    BarrierGate:
+      type: object
+      properties:
+        id:
+          type: integer
+        gateNo:
+          type: string
+          description: 道闸编号
+        deviceNo:
+          type: string
+          description: 设备编号
+        doorLocation:
+          type: string
+          description: 门岗位置
+        devicePosition:
+          type: integer
+          description: 设备位置
+        communityId:
+          type: integer
+          description: 所属社区ID
+
+    ResultBarrierGate:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/BarrierGate'
+        timestamp:
+          type: integer
+          format: int64
+
+    ResultListBarrierGate:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BarrierGate'
+        timestamp:
+          type: integer
+          format: int64
+
+    # ========== 框架 ==========
+    Frame:
+      type: object
+      properties:
+        id:
+          type: integer
+        frameNo:
+          type: string
+          description: 框架编号
+        building:
+          type: string
+          description: 楼栋
+        unit:
+          type: string
+          description: 单元
+        elevator:
+          type: string
+          description: 电梯
+        communityId:
+          type: integer
+          description: 所属社区ID
+
+    ResultListFrame:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Frame'
+        timestamp:
+          type: integer
+          format: int64
+
+    # ========== 方案 ==========
+    Plan:
+      type: object
+      properties:
+        id:
+          type: integer
+        planNo:
+          type: string
+          description: 方案编号
+        planName:
+          type: string
+          description: 方案名称
+        customer:
+          type: string
+          description: 客户名称
+        releaseStatus:
+          type: integer
+          description: 发布状态
+        releaseDateBegin:
+          type: string
+          format: date
+        releaseDateEnd:
+          type: string
+          format: date
+
+    # ========== 分页 ==========
+    PageResult:
+      type: object
+      properties:
+        pageNum:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+        list:
+          type: array
+          items:
+            type: object
+
+    ResultPageResultCommunity:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          allOf:
+            - $ref: '#/components/schemas/PageResult'
+            - properties:
+                list:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Community'
+        timestamp:
+          type: integer
+          format: int64
+
+    # ========== 方案关联 ==========
+    PlanCommunity:
+      type: object
+      properties:
+        id:
+          type: integer
+        planId:
+          type: integer
+        communityId:
+          type: integer
+        releaseDateBegin:
+          type: string
+          format: date
+        releaseDateEnd:
+          type: string
+          format: date
+
+    PlanCommunityQueryParam:
+      type: object
+      properties:
+        planId:
+          type: integer
+        communityId:
+          type: integer
+        pageNum:
+          type: integer
+          default: 1
+        pageSize:
+          type: integer
+          default: 10
+
+    PlanBarrier:
+      type: object
+      properties:
+        id:
+          type: integer
+        planId:
+          type: integer
+        barrierGateId:
+          type: integer
+        releaseDateBegin:
+          type: string
+          format: date
+        releaseDateEnd:
+          type: string
+          format: date
+
+    PlanBarrierQueryParam:
+      type: object
+      properties:
+        planId:
+          type: integer
+        barrierGateId:
+          type: integer
+        pageNum:
+          type: integer
+          default: 1
+        pageSize:
+          type: integer
+          default: 10
+
+    PlanFrame:
+      type: object
+      properties:
+        id:
+          type: integer
+        planId:
+          type: integer
+        frameId:
+          type: integer
+        releaseDateBegin:
+          type: string
+          format: date
+        releaseDateEnd:
+          type: string
+          format: date
+
+    PlanFrameQueryParam:
+      type: object
+      properties:
+        planId:
+          type: integer
+        frameId:
+          type: integer
+        pageNum:
+          type: integer
+          default: 1
+        pageSize:
+          type: integer
+          default: 10
