@@ -1,2 +1,14 @@
 /.idea/
 /outdoor-saas-be/target/
+/outdoor-saas-be/.classpath
+/.env
+/outdoor-saas-be/.project
+/src/main/resources/application-dev.yml
+/backend.log
+/src/main/resources/static/index.html
+/src/main/resources/static/assets/index-a8uE2Fof.css
+/src/main/resources/static/assets/index-O4VoeMWc.js
+.DS_Store
+docs/.DS_Store
+rules/.DS_Store
+skills/.DS_Store

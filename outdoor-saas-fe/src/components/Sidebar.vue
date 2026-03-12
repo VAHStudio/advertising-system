@@ -80,7 +80,7 @@ const navItems = [
   { name: '方案道闸', icon: 'directions_car', path: '/plan-barriers' },
   { name: '方案框架', icon: 'view_module', path: '/plan-frames' },
   { type: 'divider', name: '智能助手' },
-  { name: 'AI 助手', icon: 'smart_toy', path: '/ai-assistant' },
+  { name: '投小智', icon: 'smart_toy', path: '/ai-assistant' },
 ];
 
 const isActive = (path: string) => {

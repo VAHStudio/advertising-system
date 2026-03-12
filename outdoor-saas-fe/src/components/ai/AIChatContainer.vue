@@ -2,6 +2,7 @@
   <div :class="['h-full flex flex-col bg-background-light dark:bg-background-dark', className]">
     <!-- Header -->
     <AIChatHeader
+      v-if="showHeader"
       :title="title"
       :subtitle="subtitle"
       @clear="streamingState.clearMessages"
@@ -28,10 +29,10 @@
               <span class="text-4xl">🤖</span>
             </div>
             <h2 class="text-xl font-medium text-text-light dark:text-text-dark mb-3">
-              有什么可以帮您的？
+              你好，我是投小智
             </h2>
             <p class="text-sm text-subtext-light dark:text-subtext-dark max-w-md">
-              我可以帮您查询和管理社区、道闸、框架、方案等信息。
+              您的专属AI员工，可以帮您查询和管理社区、道闸、框架、方案等信息。
               <br />
               点击上方快捷指令或输入您想了解的内容。
             </p>
@@ -85,13 +86,15 @@ interface Props {
   quickCommands?: QuickCommand[];
   placeholder?: string;
   className?: string;
+  showHeader?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: 'AI 助手',
-  subtitle: '智能管理您的广告资源',
+  title: '投小智',
+  subtitle: '你的AI员工',
   placeholder: '输入指令，例如：查询所有社区...',
   className: '',
+  showHeader: true,
   quickCommands: () => [
     { label: '查询所有社区', command: '查询所有社区', icon: '🏢' },
     { label: '查询所有方案', command: '查询所有方案', icon: '📋' },

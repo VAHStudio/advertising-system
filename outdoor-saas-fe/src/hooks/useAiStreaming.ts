@@ -22,6 +22,26 @@ export interface UseAiStreamingReturn {
 }
 
 /**
+ * 解析消息内容，提取 <think> 标签
+ * @param content 原始内容
+ * @returns { thinking: 思考内容, formal: 正式回复 }
+ */
+const parseThinkingContent = (content: string): { thinking: string; formal: string } => {
+  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+  
+  if (thinkMatch) {
+    // 提取 <think> 标签内的内容
+    const thinking = thinkMatch[1].trim();
+    // 移除 <think> 标签，保留其他内容
+    const formal = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+    return { thinking, formal };
+  }
+  
+  // 没有 <think> 标签，全部作为正式回复
+  return { thinking: '', formal: content };
+};
+
+/**
  * AI 助手流式对话 Composable (Vue 3 版本)
  */
 export function useAiStreaming(options: UseAiStreamingOptions = {}) {
@@ -34,6 +54,10 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
   let eventSource: EventSource | null = null;
   let assistantMessageId = '';
   let pendingMessage: string | null = null;
+  
+  // 思考过程相关状态
+  let thinkingStartTime: number | null = null;
+  let accumulatedContent = ''; // 累积原始内容用于提取 think
   
   // 设置当前会话ID
   const setConversationId = (id: string | null) => {
@@ -54,6 +78,10 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     // Create message IDs
     const userMessageId = Date.now().toString();
     assistantMessageId = (Date.now() + 1).toString();
+
+    // Reset thinking state
+    thinkingStartTime = null;
+    accumulatedContent = '';
 
     // Add messages to state
     messages.value = [
@@ -169,18 +197,62 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     console.log('[AI] Content length:', content.length);
 
     switch (data.type) {
-      case 'agent_message':
-      case 'message':
       case 'agent_thought':
-        // 更新消息内容（即使是空字符串也更新，以触发UI刷新）
-        console.log('[AI] Updating message, targetId:', targetId, 'content:', content);
-        console.log('[AI] Current messages:', messages.value.map(m => ({ id: m.id, role: m.role, contentLen: m.content.length })));
+        // 思考过程 - 只记录开始时间，内容不直接显示
+        if (!thinkingStartTime) {
+          thinkingStartTime = Date.now();
+        }
+        
+        // 累积思考内容
+        accumulatedContent += content;
+        
+        // 计算思考时间
+        const thinkingTime = thinkingStartTime ? (Date.now() - thinkingStartTime) / 1000 : 0;
+        
+        // 尝试提取 think 标签（如果是流式返回的，可能还不完整）
+        const parsed = parseThinkingContent(accumulatedContent);
+        
+        // 更新消息
         messages.value = messages.value.map((msg) =>
           msg.id === targetId
-            ? { ...msg, content: msg.content + content, isStreaming: true }
+            ? { 
+                ...msg, 
+                thinking: parsed.thinking || accumulatedContent, // 如果还没闭合，显示已接收的部分
+                thinkingTime,
+                content: parsed.formal,
+                isStreaming: true 
+              }
             : msg
         );
-        console.log('[AI] Updated messages:', messages.value.map(m => ({ id: m.id, role: m.role, contentLen: m.content.length, isStreaming: m.isStreaming })));
+        break;
+
+      case 'agent_message':
+      case 'message':
+        // 正式回复内容
+        if (!thinkingStartTime) {
+          thinkingStartTime = Date.now();
+        }
+        
+        // 累积内容
+        accumulatedContent += content;
+        
+        // 解析 <think> 标签
+        const parsedContent = parseThinkingContent(accumulatedContent);
+        
+        // 计算思考时间
+        const currentThinkingTime = thinkingStartTime ? (Date.now() - thinkingStartTime) / 1000 : 0;
+        
+        messages.value = messages.value.map((msg) =>
+          msg.id === targetId
+            ? { 
+                ...msg, 
+                content: parsedContent.formal,
+                thinking: parsedContent.thinking || msg.thinking,
+                thinkingTime: currentThinkingTime,
+                isStreaming: true 
+              }
+            : msg
+        );
         break;
 
       case 'tool_call':
@@ -217,8 +289,21 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
       case 'workflow_finished':
       case 'message_end':
         console.log('[AI] Stream ended');
+        
+        // 最终解析一次内容
+        const finalParsed = parseThinkingContent(accumulatedContent);
+        const finalThinkingTime = thinkingStartTime ? (Date.now() - thinkingStartTime) / 1000 : 0;
+        
         messages.value = messages.value.map((msg) =>
-          msg.id === targetId ? { ...msg, isStreaming: false } : msg
+          msg.id === targetId 
+            ? { 
+                ...msg, 
+                isStreaming: false,
+                content: finalParsed.formal || msg.content,
+                thinking: finalParsed.thinking || msg.thinking,
+                thinkingTime: finalThinkingTime
+              } 
+            : msg
         );
         cleanup();
         break;
@@ -235,12 +320,27 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     eventSource?.close();
     eventSource = null;
     assistantMessageId = '';
+    thinkingStartTime = null;
+    accumulatedContent = '';
   };
 
   const stopStreaming = () => {
     const targetId = assistantMessageId;
+    const finalThinkingTime = thinkingStartTime ? (Date.now() - thinkingStartTime) / 1000 : 0;
+    
+    // 最终解析
+    const finalParsed = parseThinkingContent(accumulatedContent);
+    
     messages.value = messages.value.map((msg) =>
-      msg.id === targetId ? { ...msg, isStreaming: false } : msg
+      msg.id === targetId 
+        ? { 
+            ...msg, 
+            isStreaming: false, 
+            thinkingTime: finalThinkingTime,
+            content: finalParsed.formal || msg.content,
+            thinking: finalParsed.thinking || msg.thinking
+          } 
+        : msg
     );
     cleanup();
   };

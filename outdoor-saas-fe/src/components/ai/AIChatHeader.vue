@@ -1,8 +1,8 @@
 <template>
   <div class="flex items-center justify-between px-6 py-4 border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-        <span class="text-xl">🤖</span>
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+        智
       </div>
       <div>
         <h2 class="text-lg font-bold text-text-light dark:text-text-dark">{{ title }}</h2>

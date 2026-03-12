@@ -6,6 +6,8 @@ export interface ChatMessage {
   content: string;
   isStreaming?: boolean;
   toolCalls?: ToolCallInfo[];
+  thinking?: string; // 思考过程内容
+  thinkingTime?: number; // 思考耗时（秒）
 }
 
 export interface ToolCallInfo {

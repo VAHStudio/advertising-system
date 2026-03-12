@@ -1,7 +1,7 @@
 <template>
   <AIChatContainer
-    title="AI 助手"
-    subtitle="智能管理您的广告资源"
+    title="投小智"
+    subtitle="你的AI员工"
   />
 </template>
 
