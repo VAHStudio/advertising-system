@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - logicalFilePath: db/changelog/db.changelog-master.yaml
+
+  # ============================================================================
+  # 数据库变更日志主文件
+  # 采用 Baseline 方式管理，已有 V1~V10 的 Flyway 迁移已执行
+  # 从 001-baseline.yaml 开始作为新的基线
+  # ============================================================================
+
+  # 基线变更集 - 标记数据库当前状态
+  # 此变更集仅用于初始化 DATABASECHANGELOG 表，不执行实际 DDL
+  - include:
+      file: changes/001-baseline.yaml
+      relativeToChangelogFile: true
+
+  # 后续新变更集示例（如需新表或修改，在此添加）
+  # - include:
+  #     file: changes/002-add-new-feature.yaml
+  #     relativeToChangelogFile: true

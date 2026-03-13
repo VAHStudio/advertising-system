@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: baseline-2026-03-13
+      author: ai-assistant
+      context: baseline
+      comment: |
+        数据库基线变更集
+        
+        此变更集标记数据库的当前状态。
+        此前的 Flyway 迁移（V1~V10）已完成以下表的创建：
+        
+        - V1: 初始化数据库
+        - V2: 创建基础表
+        - V3-V4: 占位符
+        - V5: 创建用户表
+        - V6: 添加过滤索引
+        - V7: 添加关联表缺失字段
+        - V1.9: 创建 AI 会话表
+        - V8: 添加计划时间戳字段
+        - V9: 增强 AI 会话表（添加 mode, message_count, last_message_preview 字段）
+        - V10: 创建 AI 对话消息表
+        
+        从 Liquibase 开始接管后，所有新的数据库变更应使用 Liquibase 格式添加到此目录。
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 1
+            sql: SELECT COUNT(*) FROM ai_conversation LIMIT 1
+      tagDatabase:
+        tag: baseline-flyway-v10
+      
+      # 这是一个空变更集，仅用于标记基线状态
+      # 它不会执行任何 DDL，但会在 DATABASECHANGELOG 表中记录
+      changes:
+        - sql:
+            sql: SELECT 1
+            comment: 标记基线状态，Flyway V1~V10 已执行的表结构
