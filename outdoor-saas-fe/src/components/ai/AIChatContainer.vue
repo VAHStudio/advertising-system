@@ -5,9 +5,27 @@
       v-if="showHeader"
       :title="title"
       :subtitle="subtitle"
-      @clear="streamingState.clearMessages"
+      :current-mode="streamingState.currentMode.value"
       :disabled="streamingState.isStreaming.value"
+      @clear="streamingState.clearMessages"
+      @change-mode="handleModeChange"
     />
+
+    <!-- 模式切换提示 -->
+    <div
+      v-if="showModeChangeTip"
+      class="px-6 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-border-light dark:border-border-dark"
+    >
+      <p class="text-sm text-blue-600 dark:text-blue-400 text-center">
+        已切换到 {{ streamingState.currentMode.value === 'DIFY' ? 'Dify' : '智能体' }} 模式
+        <button
+          @click="showModeChangeTip = false"
+          class="ml-2 text-blue-400 hover:text-blue-600"
+        >
+          ×
+        </button>
+      </p>
+    </div>
 
     <!-- Quick Commands -->
     <AIQuickCommands
@@ -67,6 +85,7 @@ import { useRouter } from 'vue-router';
 import { useAiStreaming } from '@/src/hooks/useAiStreaming';
 import type { NavigationAction, QuickCommand } from '@/src/components/ai/types';
 import type { ActionButton, ChatMessage } from '@/src/hooks/useAiStreaming.types';
+import type { AiMode } from '@/src/types/aiAssistant';
 import AIChatHeader from './AIChatHeader.vue';
 import AIChatMessageList from './AIChatMessageList.vue';
 import AIChatInput from './AIChatInput.vue';
@@ -198,6 +217,25 @@ const streamingState = useAiStreaming({
   onNavigation: handleNavigation,
   onError: (error: string) => showToast('error', error),
 });
+
+// 模式切换提示
+const showModeChangeTip = ref(false);
+
+// 处理模式切换
+const handleModeChange = (mode: AiMode) => {
+  if (streamingState.isStreaming.value) {
+    showToast('warning', '对话进行中，请稍后再切换模式');
+    return;
+  }
+
+  streamingState.setMode(mode);
+  showModeChangeTip.value = true;
+
+  // 3秒后自动隐藏提示
+  setTimeout(() => {
+    showModeChangeTip.value = false;
+  }, 3000);
+};
 
 // Debug: 监视 messages 变化
 watch(streamingState.messages, () => {

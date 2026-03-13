@@ -1,5 +1,22 @@
 import { API_BASE_URL, getToken } from './api';
-import type { ChatRequest, SseEvent, Conversation } from '../types/aiAssistant';
+import type { ChatRequest, SseEvent, Conversation, AiMode } from '../types/aiAssistant';
+
+// AI模式存储键
+const AI_MODE_KEY = 'ai_mode';
+
+/**
+ * 获取默认AI模式
+ */
+export function getDefaultAiMode(): AiMode {
+  return (localStorage.getItem(AI_MODE_KEY) as AiMode) || 'DIFY';
+}
+
+/**
+ * 设置默认AI模式
+ */
+export function setDefaultAiMode(mode: AiMode): void {
+  localStorage.setItem(AI_MODE_KEY, mode);
+}
 
 /**
  * 从 token 中解析用户 ID
@@ -52,6 +69,10 @@ export function createEventSource(request: ChatRequest): EventSource {
   const params = new URLSearchParams();
   params.append('message', request.message);
   
+  // 添加 AI 模式（默认 DIFY）
+  const mode = request.mode || getDefaultAiMode();
+  params.append('mode', mode);
+  
   // 添加认证 token（SSE 通过 query param 传递）
   const token = getToken();
   if (token) {
@@ -70,7 +91,7 @@ export function createEventSource(request: ChatRequest): EventSource {
   }
 
   const url = `${API_BASE_URL}/ai-assistant/stream?${params.toString()}`;
-  console.log('[AI Service] Creating EventSource:', url);
+  console.log('[AI Service] Creating EventSource with mode:', mode, 'URL:', url);
   return new EventSource(url);
 }
 
@@ -177,6 +198,35 @@ export async function deleteConversation(conversationId: string, userId?: string
   }
 }
 
+/**
+ * 获取Custom Agent会话历史
+ * 
+ * @param sessionId 会话ID
+ * @param mode AI模式（默认为CUSTOM）
+ * @returns 会话历史消息列表
+ */
+export async function getSessionHistory(
+  sessionId: string, 
+  mode: AiMode = 'CUSTOM'
+): Promise<{ sessionId: string; mode: string; messages: any[] }> {
+  const params = new URLSearchParams();
+  params.append('mode', mode);
+  
+  const url = `${API_BASE_URL}/ai-assistant/history/${sessionId}?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${getToken() || ''}`,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch session history: ${response.status}`);
+  }
+  
+  const result = await response.json();
+  return result.data;
+}
+
 export default {
   createEventSource,
   getConversationId,
@@ -189,4 +239,7 @@ export default {
   getConversations,
   createConversation,
   deleteConversation,
+  getSessionHistory,
+  getDefaultAiMode,
+  setDefaultAiMode,
 };

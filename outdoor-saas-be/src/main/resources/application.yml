@@ -76,3 +76,31 @@ cors:
   # 是否允许携带凭证（cookies）
   allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
 
+# AI助手配置
+ai:
+  # 默认模式: DIFY 或 CUSTOM
+  default-mode: DIFY
+  
+  # AgentScope Custom Agent配置
+  custom:
+    # 模型配置
+    model:
+      provider: ${AI_MODEL_PROVIDER:openai}
+      api-key: ${AI_MODEL_API_KEY:sk-gugb1OlYqjuO}
+      model-name: ${AI_MODEL_NAME:kimi-k2.5}
+      base-url: ${AI_MODEL_BASE_URL:https://api.moonshot.cn/v1}
+      
+    # Agent配置
+    agent:
+      name: "投小智(Custom)"
+      system-prompt: |
+        你是户外广告投放管理系统的AI助手"投小智"，专门帮助用户管理广告业务。
+        你可以使用以下工具：
+        - 查询和管理广告活动
+        - 分析投放数据
+        - 生成报表
+        - 优化广告策略
+        - 页面导航
+      max-iterations: 10
+      timeout: 120s
+

@@ -1,10 +1,18 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { createEventSource, saveConversationId, getCurrentUserId, saveUserId } from '@/src/services/aiAssistantService';
-import type { SseEvent } from '@/src/types/aiAssistant';
+import { 
+  createEventSource, 
+  saveConversationId, 
+  getCurrentUserId, 
+  saveUserId,
+  getDefaultAiMode,
+  setDefaultAiMode
+} from '@/src/services/aiAssistantService';
+import type { SseEvent, AiMode } from '@/src/types/aiAssistant';
 import type { ChatMessage, ToolCallInfo } from './useAiStreaming.types';
 
 export interface UseAiStreamingOptions {
+  mode?: AiMode;
   onNavigation?: (nav: any) => void;
   onToolCall?: (tool: ToolCallInfo) => void;
   onError?: (error: string) => void;
@@ -49,6 +57,7 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
   const isStreaming = ref(false);
   const currentTool = ref<ToolCallInfo | null>(null);
   const currentConversationId = ref<string | null>(null);
+  const currentMode = ref<AiMode>(options.mode || getDefaultAiMode());
 
   // Refs for internal state
   let eventSource: EventSource | null = null;
@@ -65,6 +74,13 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     if (id) {
       saveConversationId(id);
     }
+  };
+
+  // 设置AI模式
+  const setMode = (mode: AiMode) => {
+    currentMode.value = mode;
+    setDefaultAiMode(mode);
+    console.log('[AI] Mode switched to:', mode);
   };
 
   const sendMessage = (content: string, conversationId?: string) => {
@@ -106,11 +122,12 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     }
 
     // Create new EventSource
-    console.log('[AI] Creating EventSource...');
+    console.log('[AI] Creating EventSource with mode:', currentMode.value);
     eventSource = createEventSource({ 
       message: content, 
       userId: userId || undefined,
-      conversationId 
+      conversationId,
+      mode: currentMode.value
     });
     console.log('[AI] EventSource created, URL:', eventSource.url);
 
@@ -356,10 +373,12 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     isStreaming,
     currentTool,
     currentConversationId,
+    currentMode,
     sendMessage,
     stopStreaming,
     clearMessages,
     setConversationId,
+    setMode,
   };
 }
 

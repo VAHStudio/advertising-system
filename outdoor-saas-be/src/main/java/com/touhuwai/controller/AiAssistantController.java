@@ -5,10 +5,13 @@ import com.touhuwai.client.DifyStreamingClient;
 import com.touhuwai.common.Result;
 import com.touhuwai.dto.dify.DifyStreamEvent;
 import com.touhuwai.dto.sse.SseEvent;
+import com.touhuwai.enums.AiMode;
 import com.touhuwai.service.AiAssistantService;
 import com.touhuwai.service.AiConversationService;
+import com.touhuwai.service.CustomAgentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,9 +35,13 @@ import java.util.UUID;
 public class AiAssistantController {
 
     private final DifyStreamingClient difyClient;
+    private final CustomAgentService customAgentService;
     private final AiAssistantService aiAssistantService;
     private final AiConversationService conversationService;
     private final ObjectMapper objectMapper;
+
+    @Value("${ai.default-mode:DIFY}")
+    private String defaultMode;
     
     /**
      * 流式对话接口
@@ -42,23 +49,43 @@ public class AiAssistantController {
      * 
      * @param message 用户消息
      * @param conversationId 会话 ID（可选，不传则自动关联用户当前活跃会话）
+     * @param mode AI模式（可选，不传则使用默认值）
+     * @param userId 用户ID（API Key鉴权场景）
      * @return SSE Emitter
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamChat(
             @RequestParam String message,
             @RequestParam(required = false) String conversationId,
+            @RequestParam(required = false) String mode,
             @RequestParam(required = false) String userId) {
+        
+        // 解析AI模式
+        AiMode aiMode = parseMode(mode);
         
         // 获取当前用户ID（优先使用传入的userId，用于API Key鉴权场景）
         String currentUserId = userId != null && !userId.isEmpty() 
             ? userId 
             : getCurrentUserId();
         
+        log.info("[AI] Stream request: mode={}, user={}, message={}", aiMode, currentUserId, 
+            message.length() > 50 ? message.substring(0, 50) + "..." : message);
+        
+        // 根据模式路由到不同服务
+        return switch (aiMode) {
+            case DIFY -> handleDifyChat(message, conversationId, currentUserId);
+            case CUSTOM -> handleCustomChat(message, conversationId, currentUserId);
+        };
+    }
+
+    /**
+     * 处理Dify模式对话
+     */
+    private SseEmitter handleDifyChat(String message, String conversationId, String userId) {
         // 获取或创建会话（基于用户ID关联对话）
         // 如果是新会话，返回 null，让 Dify 生成 conversation_id
         String activeConversationId = conversationService.getOrCreateConversation(
-            currentUserId, conversationId);
+            userId, conversationId);
         
         // 创建 SSE Emitter，超时 5 分钟
         SseEmitter emitter = new SseEmitter(300_000L);
@@ -69,7 +96,7 @@ public class AiAssistantController {
         
         // 构建上下文
         Map<String, Object> inputs = new HashMap<>();
-        inputs.put("userId", currentUserId);
+        inputs.put("userId", userId);
         // 只有存在有效会话ID时才传递给 Dify
         if (activeConversationId != null && !activeConversationId.isEmpty()) {
             inputs.put("conversationId", activeConversationId);
@@ -94,20 +121,20 @@ public class AiAssistantController {
                     // 情况1：之前没有会话ID，保存新的
                     if (currentId == null) {
                         currentConversationId.set(difyConversationId);
-                        conversationService.saveConversationMapping(currentUserId, difyConversationId);
+                        conversationService.saveConversationMapping(userId, difyConversationId);
                         log.info("保存 Dify 生成的会话ID: userId={}, conversationId={}", 
-                            currentUserId, difyConversationId);
+                            userId, difyConversationId);
                     }
                     // 情况2：会话ID发生了变化（原会话失效，Dify创建了新会话）
                     else if (!currentId.equals(difyConversationId)) {
                         log.warn("会话ID变更: old={}, new={}", currentId, difyConversationId);
                         // 删除旧的映射关系
-                        conversationService.deleteConversation(currentUserId, currentId);
+                        conversationService.deleteConversation(userId, currentId);
                         // 保存新的映射关系
                         currentConversationId.set(difyConversationId);
-                        conversationService.saveConversationMapping(currentUserId, difyConversationId);
+                        conversationService.saveConversationMapping(userId, difyConversationId);
                         log.info("更新会话映射: userId={}, newConversationId={}", 
-                            currentUserId, difyConversationId);
+                            userId, difyConversationId);
                     }
                 }
                 handleDifyEvent(emitterId, emitter, event, currentConversationId.get());
@@ -314,6 +341,147 @@ public class AiAssistantController {
             ? userId 
             : getCurrentUserId();
         conversationService.deleteConversation(currentUserId, conversationId);
+
+        // 如果是Custom Agent会话，也清除Agent缓存
+        if (conversationId != null && conversationId.startsWith("custom-")) {
+            customAgentService.clearSession(conversationId);
+        }
+
         return Result.success("删除成功");
+    }
+
+
+    /**
+     * 处理Custom Agent模式对话 - 真正的流式输出
+     */
+    private SseEmitter handleCustomChat(String message, String conversationId, String userId) {
+        // 使用sessionId作为Custom Agent的会话标识
+        String sessionId = conversationId != null && !conversationId.isEmpty()
+            ? conversationId
+            : "custom-" + userId + "-" + UUID.randomUUID().toString();
+
+        // 创建 SSE Emitter
+        SseEmitter emitter = new SseEmitter(300_000L);
+        String emitterId = UUID.randomUUID().toString();
+        aiAssistantService.registerEmitter(emitterId, emitter);
+
+        // 使用流式输出（带持久化）
+        customAgentService.streamChat(sessionId, userId, message, new CustomAgentService.StreamCallback() {
+            private final StringBuilder fullContent = new StringBuilder();
+
+            @Override
+            public void onMessage(String content, boolean isDelta) {
+                try {
+                    if (content != null && !content.isEmpty()) {
+                        fullContent.append(content);
+
+                        SseEvent sse = new SseEvent();
+                        sse.setType("message");
+                        sse.setContent(content);
+                        sse.setDelta(isDelta);
+                        sse.setConversationId(sessionId);
+
+                        String jsonData = objectMapper.writeValueAsString(sse);
+                        emitter.send(SseEmitter.event()
+                            .id(sessionId)
+                            .name("message")
+                            .data(jsonData, MediaType.APPLICATION_JSON));
+                    }
+                } catch (Exception e) {
+                    log.error("[CustomAgent] Failed to send message", e);
+                }
+            }
+
+            @Override
+            public void onThinking(String thinking) {
+                try {
+                    SseEvent sse = new SseEvent();
+                    sse.setType("agent_thought");
+                    sse.setContent(thinking);
+                    sse.setConversationId(sessionId);
+
+                    String jsonData = objectMapper.writeValueAsString(sse);
+                    emitter.send(SseEmitter.event()
+                        .id(sessionId)
+                        .name("agent_thought")
+                        .data(jsonData, MediaType.APPLICATION_JSON));
+                } catch (Exception e) {
+                    log.error("[CustomAgent] Failed to send thinking", e);
+                }
+            }
+
+            @Override
+            public void onToolCall(String toolName, java.util.Map<String, Object> params) {
+                try {
+                    SseEvent sse = new SseEvent();
+                    sse.setType("tool_call");
+                    sse.setStatus("calling_tool");
+                    SseEvent.ToolCallInfo toolCallInfo = new SseEvent.ToolCallInfo();
+                    toolCallInfo.setToolName(toolName);
+                    sse.setToolCall(toolCallInfo);
+                    sse.setConversationId(sessionId);
+
+                    String jsonData = objectMapper.writeValueAsString(sse);
+                    emitter.send(SseEmitter.event()
+                        .id(sessionId)
+                        .name("tool_call")
+                        .data(jsonData, MediaType.APPLICATION_JSON));
+                } catch (Exception e) {
+                    log.error("[CustomAgent] Failed to send tool call", e);
+                }
+            }
+
+            @Override
+            public void onComplete() {
+                try {
+                    SseEvent endEvent = new SseEvent();
+                    endEvent.setType("end");
+                    endEvent.setStatus("completed");
+                    endEvent.setConversationId(sessionId);
+
+                    String endJson = objectMapper.writeValueAsString(endEvent);
+                    emitter.send(SseEmitter.event()
+                        .id(sessionId)
+                        .name("end")
+                        .data(endJson, MediaType.APPLICATION_JSON));
+
+                    emitter.complete();
+                } catch (Exception e) {
+                    log.error("[CustomAgent] Failed to send completion", e);
+                    emitter.completeWithError(e);
+                } finally {
+                    aiAssistantService.removeEmitter(emitterId);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                log.error("[CustomAgent] Stream error: {}", error);
+                sendErrorEvent(emitter, error);
+                emitter.complete();
+                aiAssistantService.removeEmitter(emitterId);
+            }
+        });
+
+        emitter.onCompletion(() -> aiAssistantService.removeEmitter(emitterId));
+        emitter.onTimeout(() -> aiAssistantService.removeEmitter(emitterId));
+        emitter.onError((e) -> aiAssistantService.removeEmitter(emitterId));
+
+        return emitter;
+    }
+
+    /**
+     * 解析AI模式
+     */
+    private AiMode parseMode(String mode) {
+        if (mode == null || mode.isEmpty()) {
+            return AiMode.valueOf(defaultMode);
+        }
+        try {
+            return AiMode.valueOf(mode.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown AI mode: {}, using default: {}", mode, defaultMode);
+            return AiMode.valueOf(defaultMode);
+        }
     }
 }

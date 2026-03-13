@@ -63,11 +63,15 @@ export interface AiAssistantResponse {
   conversationId?: string;
 }
 
+// AI模式
+export type AiMode = 'DIFY' | 'CUSTOM';
+
 // 聊天请求
 export interface ChatRequest {
   message: string;
   userId?: string;
   conversationId?: string;
+  mode?: AiMode;
 }
 
 // 会话信息
