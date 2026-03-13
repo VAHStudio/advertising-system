@@ -1,5 +1,5 @@
 import { API_BASE_URL, getToken } from './api';
-import type { ChatRequest, SseEvent, Conversation, AiMode } from '../types/aiAssistant';
+import type { ChatRequest, SseEvent, Conversation, ConversationMessage, AiMode } from '../types/aiAssistant';
 
 // AI模式存储键
 const AI_MODE_KEY = 'ai_mode';
@@ -128,38 +128,53 @@ export function parseSseEvent(data: string): SseEvent | null {
 }
 
 /**
- * 获取用户的所有会话
+ * 按模式获取用户的会话列表（分页）
  */
-export async function getConversations(userId?: string): Promise<Conversation[]> {
+export async function getConversations(
+  mode: AiMode,
+  page: number = 0,
+  userId?: string
+): Promise<{ conversations: Conversation[]; hasMore: boolean }> {
   const params = new URLSearchParams();
+  params.append('mode', mode);
+  params.append('page', String(page));
   if (userId) {
     params.append('userId', userId);
   }
-  
+
   const url = `${API_BASE_URL}/ai-assistant/conversations?${params.toString()}`;
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${getToken() || ''}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch conversations: ${response.status}`);
   }
-  
+
   const result = await response.json();
-  return result.data || [];
+  const conversations: Conversation[] = result.data || [];
+
+  // 判断是否还有更多（返回数量等于每页大小则认为有更多）
+  const hasMore = conversations.length === 10;
+
+  return { conversations, hasMore };
 }
 
 /**
- * 创建新会话
+ * 创建指定模式的新会话
  */
-export async function createConversation(userId?: string): Promise<{ conversationId: string; userId: string }> {
+export async function createConversation(
+  mode: AiMode,
+  userId?: string
+): Promise<{ conversationId: string; mode: AiMode; userId: string }> {
   const params = new URLSearchParams();
+  params.append('mode', mode);
   if (userId) {
     params.append('userId', userId);
   }
-  
+
   const url = `${API_BASE_URL}/ai-assistant/conversations?${params.toString()}`;
   const response = await fetch(url, {
     method: 'POST',
@@ -167,13 +182,77 @@ export async function createConversation(userId?: string): Promise<{ conversatio
       'Authorization': `Bearer ${getToken() || ''}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to create conversation: ${response.status}`);
   }
-  
+
   const result = await response.json();
   return result.data;
+}
+
+/**
+ * 获取会话消息历史（分页）
+ */
+export async function getConversationMessages(
+  conversationId: string,
+  page: number = 0,
+  userId?: string
+): Promise<{ messages: ConversationMessage[]; hasMore: boolean }> {
+  const params = new URLSearchParams();
+  params.append('page', String(page));
+  if (userId) {
+    params.append('userId', userId);
+  }
+
+  const url = `${API_BASE_URL}/ai-assistant/conversations/${conversationId}/messages?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${getToken() || ''}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch messages: ${response.status}`);
+  }
+
+  const result = await response.json();
+  const messages: ConversationMessage[] = result.data || [];
+
+  // 转换为时间正序（数据库返回倒序）
+  messages.reverse();
+
+  // 判断是否还有更多
+  const hasMore = messages.length === 10;
+
+  return { messages, hasMore };
+}
+
+/**
+ * 更新会话标题
+ */
+export async function updateConversationTitle(
+  conversationId: string,
+  title: string,
+  userId?: string
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('title', title);
+  if (userId) {
+    params.append('userId', userId);
+  }
+
+  const url = `${API_BASE_URL}/ai-assistant/conversations/${conversationId}/title?${params.toString()}`;
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${getToken() || ''}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update title: ${response.status}`);
+  }
 }
 
 /**
@@ -239,6 +318,8 @@ export default {
   getConversations,
   createConversation,
   deleteConversation,
+  getConversationMessages,
+  updateConversationTitle,
   getSessionHistory,
   getDefaultAiMode,
   setDefaultAiMode,

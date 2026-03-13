@@ -55,4 +55,42 @@ public interface AiConversationMapper {
      */
     @Delete("DELETE FROM ai_conversation WHERE user_id = #{userId} AND conversation_id = #{conversationId}")
     int deleteByUserAndConversation(@Param("userId") String userId, @Param("conversationId") String conversationId);
+    
+    /**
+     * 根据用户ID和模式查询会话列表（分页）
+     */
+    @Select("SELECT * FROM ai_conversation WHERE user_id = #{userId} AND mode = #{mode} " +
+            "ORDER BY last_message_at DESC LIMIT #{limit} OFFSET #{offset}")
+    List<AiConversation> selectByUserAndMode(@Param("userId") String userId, 
+                                              @Param("mode") String mode,
+                                              @Param("offset") int offset, 
+                                              @Param("limit") int limit);
+    
+    /**
+     * 根据会话ID查询
+     */
+    @Select("SELECT * FROM ai_conversation WHERE conversation_id = #{conversationId}")
+    AiConversation selectByConversationId(String conversationId);
+    
+    /**
+     * 更新消息统计信息
+     */
+    @Update("UPDATE ai_conversation SET " +
+            "message_count = message_count + 1, " +
+            "last_message_preview = #{preview}, " +
+            "last_message_at = NOW() " +
+            "WHERE conversation_id = #{conversationId}")
+    int updateMessageStats(@Param("conversationId") String conversationId, @Param("preview") String preview);
+    
+    /**
+     * 更新会话标题
+     */
+    @Update("UPDATE ai_conversation SET title = #{title} WHERE conversation_id = #{conversationId}")
+    int updateTitle(@Param("conversationId") String conversationId, @Param("title") String title);
+    
+    /**
+     * 根据会话ID删除
+     */
+    @Delete("DELETE FROM ai_conversation WHERE conversation_id = #{conversationId}")
+    int deleteByConversationId(String conversationId);
 }

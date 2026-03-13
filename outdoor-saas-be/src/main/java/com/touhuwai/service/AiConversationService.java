@@ -1,7 +1,9 @@
 package com.touhuwai.service;
 
 import com.touhuwai.entity.AiConversation;
+import com.touhuwai.entity.AiConversationMessage;
 import com.touhuwai.mapper.AiConversationMapper;
+import com.touhuwai.mapper.AiConversationMessageMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,8 +21,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AiConversationService {
-    
+
     private final AiConversationMapper conversationMapper;
+    private final AiConversationMessageMapper messageMapper;
+    private final AiConversationCacheService cacheService;
+
+    private static final int PAGE_SIZE = 10;
     
     /**
      * 获取或创建会话
@@ -118,12 +124,181 @@ public class AiConversationService {
     }
     
     /**
-     * 删除会话
+     * 删除会话及其消息
      */
     @Transactional
     public void deleteConversation(String userId, String conversationId) {
-        conversationMapper.deleteByUserAndConversation(userId, conversationId);
+        // 先查询会话信息
+        AiConversation conv = conversationMapper.selectByConversationId(conversationId);
+        if (conv == null) {
+            log.warn("会话不存在: conversationId={}", conversationId);
+            return;
+        }
+
+        String mode = conv.getMode();
+
+        // 删除消息
+        messageMapper.deleteByConversation(conversationId);
+
+        // 删除会话
+        conversationMapper.deleteByConversationId(conversationId);
+
+        // 清除相关缓存
+        cacheService.clearAllConversationCache(userId, mode, conversationId);
+
         log.info("删除会话: userId={}, conversationId={}", userId, conversationId);
+    }
+    
+    /**
+     * 按模式分页获取用户的会话列表（带缓存）
+     */
+    public List<AiConversation> getUserConversations(String userId, String mode, int page) {
+        int offset = page * PAGE_SIZE;
+
+        // 只有第一页使用缓存
+        if (page == 0) {
+            // 尝试从缓存获取
+            List<AiConversation> cached = cacheService.getCachedConversationList(
+                userId, mode, offset, PAGE_SIZE);
+            if (cached != null && !cached.isEmpty()) {
+                log.debug("Conversation list cache hit for user {} mode {}", userId, mode);
+                return cached;
+            }
+        }
+
+        // 从数据库查询
+        List<AiConversation> conversations = conversationMapper.selectByUserAndMode(
+            userId, mode, offset, PAGE_SIZE);
+
+        // 缓存第一页
+        if (page == 0 && !conversations.isEmpty()) {
+            cacheService.cacheConversationList(userId, mode, conversations);
+        }
+
+        return conversations;
+    }
+    
+    /**
+     * 创建指定模式的新会话
+     */
+    @Transactional
+    public String createNewConversation(String userId, String mode) {
+        String newConversationId;
+
+        if ("CUSTOM".equalsIgnoreCase(mode)) {
+            newConversationId = "custom-" + UUID.randomUUID().toString().replace("-", "");
+        } else {
+            newConversationId = UUID.randomUUID().toString().replace("-", "");
+        }
+
+        AiConversation conversation = new AiConversation();
+        conversation.setUserId(userId);
+        conversation.setConversationId(newConversationId);
+        conversation.setMode(mode);
+        conversation.setTitle("新对话");
+        conversation.setStatus(1);
+        conversation.setMessageCount(0);
+        conversation.setLastMessageAt(LocalDateTime.now());
+
+        conversationMapper.insert(conversation);
+
+        // 清除会话列表缓存
+        cacheService.clearConversationListCache(userId, mode);
+
+        // 设置活跃会话
+        cacheService.setActiveConversation(userId, newConversationId);
+
+        log.info("创建新 {} 会话: userId={}, conversationId={}", mode, userId, newConversationId);
+        return newConversationId;
+    }
+    
+    /**
+     * 保存消息并更新会话统计
+     */
+    @Transactional
+    public void saveMessage(String conversationId, String role,
+            String content, String thinking, String toolCalls) {
+        // 保存消息
+        AiConversationMessage message = new AiConversationMessage();
+        message.setConversationId(conversationId);
+        message.setRole(role);
+        message.setContent(content);
+        message.setThinking(thinking);
+        message.setToolCalls(toolCalls);
+
+        messageMapper.insert(message);
+
+        // 更新会话统计
+        String preview = content.length() > 50
+            ? content.substring(0, 50) + "..."
+            : content;
+        conversationMapper.updateMessageStats(conversationId, preview);
+
+        // 添加到缓存
+        cacheService.cacheMessage(conversationId, message);
+
+        log.debug("保存消息: conversationId={}, role={}", conversationId, role);
+    }
+    
+    /**
+     * 分页获取会话消息历史（带缓存）
+     */
+    public List<AiConversationMessage> getConversationMessages(
+            String conversationId, int page) {
+        int offset = page * PAGE_SIZE;
+
+        // 只有第一页使用缓存
+        if (page == 0) {
+            // 尝试从缓存获取
+            List<AiConversationMessage> cached = cacheService.getCachedMessages(
+                conversationId, offset, PAGE_SIZE);
+            if (cached != null && !cached.isEmpty()) {
+                log.debug("Message cache hit for conversation {}", conversationId);
+                return cached;
+            }
+        }
+
+        // 从数据库查询
+        List<AiConversationMessage> messages = messageMapper.selectByConversation(
+            conversationId, PAGE_SIZE, offset);
+
+        // 缓存第一页
+        if (page == 0 && !messages.isEmpty()) {
+            // 批量缓存消息
+            for (AiConversationMessage msg : messages) {
+                cacheService.cacheMessage(conversationId, msg);
+            }
+        }
+
+        return messages;
+    }
+    
+    /**
+     * 更新会话标题
+     */
+    @Transactional
+    public void updateTitle(String userId, String conversationId, String title) {
+        // 查询会话获取模式
+        AiConversation conv = conversationMapper.selectByConversationId(conversationId);
+        if (conv == null) {
+            log.warn("会话不存在: conversationId={}", conversationId);
+            return;
+        }
+
+        conversationMapper.updateTitle(conversationId, title);
+
+        // 清除会话列表缓存
+        cacheService.clearConversationListCache(userId, conv.getMode());
+
+        log.info("更新会话标题: userId={}, conversationId={}, title={}",
+            userId, conversationId, title);
+    }
+    
+    /**
+     * 获取单个会话详情
+     */
+    public AiConversation getConversation(String conversationId) {
+        return conversationMapper.selectByConversationId(conversationId);
     }
     
     /**

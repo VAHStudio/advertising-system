@@ -5,6 +5,8 @@ import com.touhuwai.client.DifyStreamingClient;
 import com.touhuwai.common.Result;
 import com.touhuwai.dto.dify.DifyStreamEvent;
 import com.touhuwai.dto.sse.SseEvent;
+import com.touhuwai.entity.AiConversation;
+import com.touhuwai.entity.AiConversationMessage;
 import com.touhuwai.enums.AiMode;
 import com.touhuwai.service.AiAssistantService;
 import com.touhuwai.service.AiConversationService;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -305,40 +308,87 @@ public class AiAssistantController {
     }
     
     /**
-     * 获取用户的所有会话
+     * 按模式获取用户的会话列表（分页）
      */
     @GetMapping("/conversations")
-    public Result<?> getConversations(@RequestParam(required = false) String userId) {
-        String currentUserId = userId != null && !userId.isEmpty() 
-            ? userId 
+    public Result<?> getConversations(
+            @RequestParam String mode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty()
+            ? userId
             : getCurrentUserId();
-        return Result.success(conversationService.getUserConversations(currentUserId));
+        List<AiConversation> conversations = conversationService
+            .getUserConversations(currentUserId, mode, page);
+        return Result.success(conversations);
     }
-    
+
     /**
-     * 创建新会话
+     * 创建指定模式的新会话
      */
     @PostMapping("/conversations")
-    public Result<?> createConversation(@RequestParam(required = false) String userId) {
-        String currentUserId = userId != null && !userId.isEmpty() 
-            ? userId 
+    public Result<?> createConversation(
+            @RequestParam String mode,
+            @RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty()
+            ? userId
             : getCurrentUserId();
-        String conversationId = conversationService.createNewConversation(currentUserId);
+        String conversationId = conversationService
+            .createNewConversation(currentUserId, mode);
         Map<String, String> result = new HashMap<>();
         result.put("conversationId", conversationId);
+        result.put("mode", mode);
         result.put("userId", currentUserId);
-        return Result.success("创建成功", result);
+        return Result.success(result);
     }
-    
+
     /**
-     * 删除会话
+     * 获取会话消息历史（分页）
+     */
+    @GetMapping("/conversations/{conversationId}/messages")
+    public Result<?> getMessages(
+            @PathVariable String conversationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty()
+            ? userId
+            : getCurrentUserId();
+
+        // 验证会话属于当前用户
+        AiConversation conv = conversationService.getConversation(conversationId);
+        if (conv == null || !conv.getUserId().equals(currentUserId)) {
+            return Result.error("会话不存在或无权限");
+        }
+
+        List<AiConversationMessage> messages = conversationService
+            .getConversationMessages(conversationId, page);
+        return Result.success(messages);
+    }
+
+    /**
+     * 更新会话标题
+     */
+    @PutMapping("/conversations/{conversationId}/title")
+    public Result<?> updateTitle(
+            @PathVariable String conversationId,
+            @RequestParam String title,
+            @RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty()
+            ? userId
+            : getCurrentUserId();
+        conversationService.updateTitle(currentUserId, conversationId, title);
+        return Result.success();
+    }
+
+    /**
+     * 删除会话及其消息
      */
     @DeleteMapping("/conversations/{conversationId}")
     public Result<?> deleteConversation(
             @PathVariable String conversationId,
             @RequestParam(required = false) String userId) {
-        String currentUserId = userId != null && !userId.isEmpty() 
-            ? userId 
+        String currentUserId = userId != null && !userId.isEmpty()
+            ? userId
             : getCurrentUserId();
         conversationService.deleteConversation(currentUserId, conversationId);
 
@@ -347,27 +397,49 @@ public class AiAssistantController {
             customAgentService.clearSession(conversationId);
         }
 
-        return Result.success("删除成功");
+        return Result.success();
     }
 
 
     /**
-     * 处理Custom Agent模式对话 - 真正的流式输出
+     * 处理Custom Agent模式对话 - 真正的流式输出（带消息持久化）
      */
     private SseEmitter handleCustomChat(String message, String conversationId, String userId) {
-        // 使用sessionId作为Custom Agent的会话标识
-        String sessionId = conversationId != null && !conversationId.isEmpty()
-            ? conversationId
-            : "custom-" + userId + "-" + UUID.randomUUID().toString();
+        // 确定或创建会话ID
+        final String[] sessionIdHolder = new String[1];
+        boolean isNewConversation = false;
+        
+        if (conversationId != null && !conversationId.isEmpty()) {
+            sessionIdHolder[0] = conversationId;
+            // 验证会话存在
+            AiConversation conv = conversationService.getConversation(sessionIdHolder[0]);
+            if (conv == null) {
+                // 会话不存在，创建新的
+                sessionIdHolder[0] = conversationService.createNewConversation(userId, "CUSTOM");
+                isNewConversation = true;
+            }
+        } else {
+            // 创建新会话
+            sessionIdHolder[0] = conversationService.createNewConversation(userId, "CUSTOM");
+            isNewConversation = true;
+        }
+        
+        final String sessionId = sessionIdHolder[0];
+        log.info("[CustomAgent] Using session: {}, isNew: {}", sessionId, isNewConversation);
+        
+        // 保存用户消息
+        conversationService.saveMessage(sessionId, "user", message, null, null);
 
         // 创建 SSE Emitter
         SseEmitter emitter = new SseEmitter(300_000L);
-        String emitterId = UUID.randomUUID().toString();
+        final String emitterId = UUID.randomUUID().toString();
         aiAssistantService.registerEmitter(emitterId, emitter);
 
         // 使用流式输出（带持久化）
         customAgentService.streamChat(sessionId, userId, message, new CustomAgentService.StreamCallback() {
             private final StringBuilder fullContent = new StringBuilder();
+            private final StringBuilder fullThinking = new StringBuilder();
+            private final StringBuilder fullToolCalls = new StringBuilder();
 
             @Override
             public void onMessage(String content, boolean isDelta) {
@@ -395,6 +467,8 @@ public class AiAssistantController {
             @Override
             public void onThinking(String thinking) {
                 try {
+                    fullThinking.append(thinking);
+                    
                     SseEvent sse = new SseEvent();
                     sse.setType("agent_thought");
                     sse.setContent(thinking);
@@ -434,6 +508,17 @@ public class AiAssistantController {
             @Override
             public void onComplete() {
                 try {
+                    // 保存助手完整回复到数据库
+                    String assistantContent = fullContent.toString();
+                    String assistantThinking = fullThinking.length() > 0 ? fullThinking.toString() : null;
+                    String toolCallsStr = fullToolCalls.length() > 0 ? fullToolCalls.toString() : null;
+                    
+                    if (!assistantContent.isEmpty()) {
+                        conversationService.saveMessage(sessionId, "assistant", 
+                            assistantContent, assistantThinking, toolCallsStr);
+                        log.debug("[CustomAgent] Saved assistant message for session: {}", sessionId);
+                    }
+                    
                     SseEvent endEvent = new SseEvent();
                     endEvent.setType("end");
                     endEvent.setStatus("completed");

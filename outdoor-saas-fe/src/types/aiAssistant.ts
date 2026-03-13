@@ -79,9 +79,24 @@ export interface Conversation {
   id: number;
   userId: string;
   conversationId: string;
+  mode: AiMode;           // AI模式: DIFY | CUSTOM
   title?: string;
   status: number;
+  messageCount?: number;           // 消息数量
+  lastMessagePreview?: string;     // 最后消息预览
   createdAt: string;
   updatedAt: string;
   lastMessageAt: string;
+}
+
+// 会话消息（历史记录）
+export interface ConversationMessage {
+  id: number;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  thinking?: string;      // 思考过程（Custom模式）
+  toolCalls?: string;     // JSON格式
+  metadata?: string;      // JSON格式
+  createdAt: string;
 }

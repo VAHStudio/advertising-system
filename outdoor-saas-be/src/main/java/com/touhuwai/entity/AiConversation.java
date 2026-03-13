@@ -31,9 +31,24 @@ public class AiConversation {
     private String title;
     
     /**
+     * AI模式: DIFY 或 CUSTOM
+     */
+    private String mode;
+    
+    /**
      * 状态：1-活跃 0-已归档
      */
     private Integer status;
+    
+    /**
+     * 消息数量统计
+     */
+    private Integer messageCount;
+    
+    /**
+     * 最后消息预览
+     */
+    private String lastMessagePreview;
     
     /**
      * 创建时间
